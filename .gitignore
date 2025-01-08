@@ -1,0 +1,6 @@
+/docs/make.bat
+/docs/Makefile
+/docs/source/_static/
+/docs/source/_templates/
+/docs/build/
+/out/

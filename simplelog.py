@@ -1,0 +1,337 @@
+import inspect
+from datetime import datetime
+from enum import Enum
+from dataclasses import dataclass,field
+from .logic import *
+from .formatter import Formatter
+
+
+
+class BaseLogger:
+    parent: any
+    log_level: LoggerLevel
+    _name:str
+    _cache: LoggerCache
+    _formatter: Formatter
+    _mute_console: bool = False
+    _mute_all: bool = False
+    _solo: bool = False
+
+
+    def __init__(self,name:str, parent:any, log_level):
+        self.log_level = log_level
+        self._name = name
+        self.parent = parent
+        self._cache = LoggerCache(30,self)
+        self._formatter = Formatter(self._name)
+
+    def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any):
+        """
+            Base function for loggers
+
+            PARAMETERS:
+                - loglevel: LoggerLevel
+                - formatter: LoggerFormatter
+            RETURN:
+                - None
+
+
+        :param loglevel:
+        :return:
+        """
+        module_name = __name__
+        msg = self.formatter.compile(msg=info,frame=frame,loglevel=loglevel,data=data)
+        # msg = f'{module_name}.{qual_name}'
+        # print(msg)
+        msg_obj = LoggerMessage(self.loggername, loglevel, msg)
+        #
+        self.__base_output_function(msg_obj)
+
+    def __base_output_function(self,data)->None:
+        if not self.mute_all:
+            self.cache.register(data)
+            if not self.console:
+                print(data.msg)
+
+
+    @property
+    def solo(self)->bool:
+        return self._solo
+
+
+    @property
+    def mute_all(self)->bool:
+        return self._mute_all
+
+
+    @property
+    def console(self)->bool:
+        return self._mute_console
+
+
+    @property
+    def cache(self)->LoggerCache:
+        return self._cache
+
+    @property
+    def loggername(self) -> str:
+        return self._name
+
+    @property
+    def formatter(self)->Formatter:
+        return self._formatter
+
+
+    def toggle_solo(self)->bool:
+        tog = False
+        if not self.solo:
+            tog = True
+        self._solo = tog
+        return tog
+
+    def toggle_mute_all(self)->bool:
+        tog = False
+        if not self._mute_all:
+            tog = True
+        self._mute_all = tog
+        return tog
+
+    def toggle_console(self)->bool:
+        tog = False
+        if not self.console:
+            tog = True
+        self._mute_console = tog
+        return tog
+
+    def toggle_data(self)->None:
+
+        res = self.formatter.toggle_data()
+        self.warning(f"Data Logging is {res}!")
+    def toggle_short(self)->None:
+        self.formatter.toggle_short_format()
+        self.warning("Short format is Off!")
+
+    def debug(self, info:str, loggger_msg_data:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with predefinded log level.
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = LoggerLevel.DEBUG
+        # qualname = frame.f_code.co_qualname
+        # if qualname[0] == '<':
+        #     qualname = ""
+        # # # self.toggle_to_console
+        # # print("INSPECT FRAME :: ",frame.f_globals)
+        # # print("INSPECT FRAME local :: ",frame.f_locals)
+        # print("INSPECT FRAME local :: ",inspect.getmodule(frame).__name__)
+        # # print("INSPECT FRAME local :: ",inspect.getmodule(frame))
+        # print("INSPECT FRAME local :: ",frame.f_code.co_qualname)
+        # print("INSPECT FRAME local :: ",frame.f_code.co_name)
+        # print("INSPECT FRAME local :: ",inspect.getframeinfo(frame))
+        # print("INSPECT FRAME local :: ",frame.f_lineno)
+        # # print("INSPECT FRAME local :: ",frame.f_code)
+        # # print("INSPECT FRAME local :: ",inspect.getmembers(frame))
+        # # print("INSPECT FRAME buid :: ",inspect.getouterframes(frame))
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+
+    def info(self, info:str, loggger_msg_data:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with predefinded log level.
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = LoggerLevel.INFO
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel, frame, info, loggger_msg_data)
+
+    def warning(self, info:str, loggger_msg_data:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with predefinded log level.
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = LoggerLevel.WARNING
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+
+    def error(self, info:str, loggger_msg_data:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with predefinded log level.
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = LoggerLevel.ERROR
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+
+    def critical(self, info:str, loggger_msg_data:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with predefinded log level.
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = LoggerLevel.CRITICAL
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+
+
+@dataclass(init=False)
+class LoggerManager:
+    _root_cache:MasterLoggerCache
+    _root_logger: BaseLogger
+    _solo_on: bool = False
+    _solo_list:list = field(init=False,default_factory=list)
+    _mute_on:bool = False
+    _muted_list: list = field(init=False,default_factory=list)
+    def __init__(self):
+        name = 'root'
+        parent = None
+        log_level = LoggerLevel.DEBUG
+        self._root_logger = BaseLogger('__root__',self,log_level)
+        self._root_cache = MasterLoggerCache(200,self)
+        fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::<<module>>.<<function>>::<<msg>>"
+
+        self._root_logger.formatter.replace_format('long',fmt)
+    def _logger_actions(self,loggerlist:list,action:str)->bool:
+        actions_list:list=["mute mute_all",
+                           "unmute mute_all",
+                           "mute console",
+                           "unmute console",
+                           "unmute data",
+                           "mute data"
+                           ]
+        for log in loggerlist:
+            loggercacheline = self.get_logger_by_name(log)
+            logger:BaseLogger = loggercacheline.logger
+            do,what = action.split(" ")
+            if action in actions_list:
+                logbool = getattr(logger,what)
+                if do == "mute":
+                    if not logbool:
+                        logfunc = getattr(logger,f"toggle_{what}")
+                        logfunc()
+                if do == "unmute":
+                    if logbool:
+                        logfunc = getattr(logger,f"toggle_{what}")
+                        logfunc()
+            pass
+
+    def mute_all_or_sip(self,sip:str = None)->None:
+        """
+            Mutes all Loggers.
+            If a loggername is given in siü, it acts as SOLO IN PLACE.
+
+            Solo in Place overrides every solo,meainig it's destructive where as the normal soolo functio is additive.
+
+
+        """
+        loggerlist = self.rootcache.logger_by_name
+        self._mute_on = True
+        self._solo_on = False
+        self._muted_list = loggerlist
+        self._solo_list = []
+
+        if sip is not None:
+            loggerlist.remove(sip)
+            self._mute_on = False
+            self._solo_on = True
+            self._muted_list = []
+            self._solo_list = [sip]
+
+        self._logger_actions(loggerlist,"mute console")
+
+
+    def solo_logger(self,name:str)->None:
+        """
+            Solo's the logger.
+
+            When first invoked, it sip's(solo in place) the loggers,
+            then adds every solo'd logger to the solo bus
+        """
+        if not self._solo_on:
+            self.mute_all_or_sip()
+            self._solo_on = True
+        else:
+            self._logger_actions([name],"umute console")
+        self._solo_list.append(name)
+
+    def solo_off(self,name:str = None)->None:
+        if name is None:
+            self._solo_on = False
+            loggerlist = [x for x in self.rootcache.logger_by_name if x not in self._solo_list]
+            self._solo_list = []
+            self._logger_actions(loggerlist, "unmute console")
+        else:
+            self._logger_actions([name],"mute console")
+            self._solo_list.remove(name)
+
+    def mute_logger(self,logger:str)->None:
+        """ Muets the logger, is additive"""
+        self._mute_on = True
+        self._logger_actions(logger,"mute console")
+        self._muted_list.append(logger)
+
+    def mute_off(self, name: str = None) -> None:
+        if name is None:
+            self._mute_on = False
+            # loggerlist =  [x for x in self.rootcache.logger_by_name if x not in self._muted_list]
+            self.solo_off()
+            self._muted_list = []
+        else:
+            self._logger_actions([name], "unmute console")
+            self._muted_list.remove(name)
+
+    @property
+    def rootcache(self)->MasterLoggerCache:
+        return self._root_cache
+
+    @property
+    def rootlogger(self)->MasterLoggerCache:
+        return self._root_logger
+
+
+    def get_logger_by_name(self,name:str)->LoggerCacheline:
+        return self.rootcache.cache_entry_by_name(name)
+
+
+    def make_new_logger(self,name:str)->BaseLogger:
+        new_logger = BaseLogger(name,self._root_logger,self._root_logger.log_level)
+        new_logger.cache.parent_cache = self._root_cache
+        self._root_cache.register(new_logger)
+        return new_logger
+
+
+    def __post_init__(self):
+        print("WWWWWWW")

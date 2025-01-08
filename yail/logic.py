@@ -129,7 +129,7 @@ class Registry:
     _free: list[int] = field(init=False, default_factory=list)
     #: Length of the register, eg how many rooms
     max_len: int = field(default=70)
-    parent_cache: object | None = None
+    _cache: object | None = None
 
 
     def __repr__(self)->str:

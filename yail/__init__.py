@@ -1,5 +1,5 @@
-from .simplelog import *
-from dataclasses import dataclass
+from .yail_log import LoggerCache,LoggerManager,BaseLogger,LoggerLevel,LoggerCacheline,LoggerMessage
+from inspect import currentframe
 
 LOGGER:LoggerManager = LoggerManager()
 
@@ -15,6 +15,7 @@ def muteoff()->None:
     mute()
 def sip(loggername:str)->None:
     LOGGER.mute_all_or_sip(loggername)
+    info(f"Solo in Place for {loggername}")
 
 def sipoff()->None:
     solo()
@@ -52,24 +53,28 @@ def debug(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
+    frame = currentframe().f_back
     LOGGER._root_logger.debug(info,loggger_msg_data)
 
 def info(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
-    LOGGER._root_logger.info(info,loggger_msg_data)
+    frame = currentframe().f_back
+    LOGGER._root_logger.info(info,loggger_msg_data,frame)
 
 def warning(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
+    frame = currentframe().f_back
     LOGGER._root_logger.warning(info,loggger_msg_data)
 
 def error(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
+    frame = currentframe().f_back
     LOGGER._root_logger.error(info,loggger_msg_data)
 
 
@@ -77,6 +82,7 @@ def critical(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
+    frame = currentframe().f_back
     LOGGER._root_logger.critical(info,loggger_msg_data)
 
 

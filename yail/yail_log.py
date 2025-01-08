@@ -1,6 +1,5 @@
 import inspect
 from datetime import datetime
-from enum import Enum
 from dataclasses import dataclass,field
 from .logic import *
 from .formatter import Formatter
@@ -25,7 +24,7 @@ class BaseLogger:
         self._cache = LoggerCache(30,self)
         self._formatter = Formatter(self._name)
 
-    def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any):
+    def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
         """
             Base function for loggers
 
@@ -40,7 +39,10 @@ class BaseLogger:
         :return:
         """
         module_name = __name__
-        msg = self.formatter.compile(msg=info,frame=frame,loglevel=loglevel,data=data)
+        act_fram = frame
+        if external_frame is not None:
+            act_fram = external_frame
+        msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
         # msg = f'{module_name}.{qual_name}'
         # print(msg)
         msg_obj = LoggerMessage(self.loggername, loglevel, msg)
@@ -111,7 +113,7 @@ class BaseLogger:
         self.formatter.toggle_short_format()
         self.warning("Short format is Off!")
 
-    def debug(self, info:str, loggger_msg_data:any = None) -> None:
+    def debug(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
 
@@ -140,9 +142,9 @@ class BaseLogger:
         # # print("INSPECT FRAME local :: ",inspect.getmembers(frame))
         # # print("INSPECT FRAME buid :: ",inspect.getouterframes(frame))
         frame = inspect.currentframe().f_back
-        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
-    def info(self, info:str, loggger_msg_data:any = None) -> None:
+    def info(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
 
@@ -156,9 +158,9 @@ class BaseLogger:
         """
         loglevel = LoggerLevel.INFO
         frame = inspect.currentframe().f_back
-        self.__base_log_functions(loglevel, frame, info, loggger_msg_data)
+        self.__base_log_functions(loglevel, frame, info, loggger_msg_data, external_frame)
 
-    def warning(self, info:str, loggger_msg_data:any = None) -> None:
+    def warning(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
 
@@ -172,9 +174,9 @@ class BaseLogger:
         """
         loglevel = LoggerLevel.WARNING
         frame = inspect.currentframe().f_back
-        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
-    def error(self, info:str, loggger_msg_data:any = None) -> None:
+    def error(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
 
@@ -188,9 +190,9 @@ class BaseLogger:
         """
         loglevel = LoggerLevel.ERROR
         frame = inspect.currentframe().f_back
-        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
-    def critical(self, info:str, loggger_msg_data:any = None) -> None:
+    def critical(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
 
@@ -204,13 +206,14 @@ class BaseLogger:
         """
         loglevel = LoggerLevel.CRITICAL
         frame = inspect.currentframe().f_back
-        self.__base_log_functions(loglevel,frame,info,loggger_msg_data)
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
 
 @dataclass(init=False)
 class LoggerManager:
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
+    _application_name:str = "janetd"
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
@@ -221,8 +224,8 @@ class LoggerManager:
         log_level = LoggerLevel.DEBUG
         self._root_logger = BaseLogger('__root__',self,log_level)
         self._root_cache = MasterLoggerCache(200,self)
-        fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::<<module>>.<<function>>::<<msg>>"
-
+        # fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::{self._application_name} System ::<<msg>>"
+        fmt= f"<<today>>::<<loggername>>::<<loglevel>>::<<module>>.<<class>>.<<function>>::<<msg>>::<<data>>"
         self._root_logger.formatter.replace_format('long',fmt)
     def _logger_actions(self,loggerlist:list,action:str)->bool:
         actions_list:list=["mute mute_all",

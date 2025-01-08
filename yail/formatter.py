@@ -3,7 +3,7 @@ import inspect
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass,field
-from logger.logic import LoggerLevel
+from .logic import LoggerLevel
 
 def iso_date(dummy:str)->str:
     # return datetime.isoformat("YYYY-MM-DD HH:MM:SS")

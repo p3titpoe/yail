@@ -463,10 +463,13 @@ class Formatter:
             # print(composite)
             if tag not in self._conf.package_members:
                 composite.set_column_width(10)
+
             # print(composite)
             sep = self._conf.columns_separator
             if tag in self._conf.package_members:
                 sep = self._conf.module_separator
+            if tag =='loglevel':
+                print(composite)
             tmp = f"{composite.compile()}{sep}"
             out += tmp
 

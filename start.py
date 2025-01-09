@@ -1,37 +1,23 @@
+import inspect
 import yail as logger
+import yail.formatter
+from yail.logic import LoggerLevel,LoggerMessage
 from testing.models import testclass,testclassb
 
 hh =logger.get_logger("OOOOO")
 
-bb = logger.get_logger('Test')
-tst = testclass()
-tst2 = testclassb()
-logger.warning("Logger will stop output to console")
-tt2 = logger.logger_by_name('test3')
-# print("TEST2 ", tt2.cache.booked)
-tst2.blas(3,4)
-tt2.info("well Then..")
-# print("TEST2 ", tt2.cache.booked)
-def fr():
-    logger.info("Who is this")
-fr()
-logger.sip('test3')
-# logger.info("Logger stopped processind")
-logger.info("Rootlogger is still working")
-hh.info("Other logger")
-# # for k,x in logger.LOGGER.rootcache.registry.items():
-# #     if x is not None:
-# #         print("Main Logger",k,"  ",x.name)
-tst2.blas(5, 5)
-# print("TEST2 ", tt2.cache.booked)
-# print("TEST2 ", tt2.mute_all,tt2.console)
-#
-cc = logger.logger_by_name("test3")
-cc.warning("Switched to another module")
-# logger.muteoff()
-cc.critical("This is  printing")
-hh.info("I'm here!!")
+fmt = yail.formatter.Formatter("Test")
 
+def testfunc()->any:
+    return fmt.compile_new("TEST",inspect.currentframe(),LoggerLevel.DEBUG)
+
+for x in range (0,5):
+
+    mm = testfunc()
+    print(mm)
+# print(f"{mm.compile()},mm")
+
+#LOGGGER TESTING
 #
 # class testclassc:
 #     def __init__(self, bb="WWWW"):

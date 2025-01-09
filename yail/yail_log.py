@@ -7,6 +7,13 @@ from .formatter import Formatter
 
 
 class BaseLogger:
+    """
+        Base interactive cached Logger class
+
+        Needs LoggerCache & Formatter, Parent should be a loggermanager
+
+        Exposes log functions for the different levels
+    """
     parent: any
     log_level: LoggerLevel
     _name:str
@@ -33,10 +40,6 @@ class BaseLogger:
                 - formatter: LoggerFormatter
             RETURN:
                 - None
-
-
-        :param loglevel:
-        :return:
         """
         module_name = __name__
         act_fram = frame
@@ -85,6 +88,7 @@ class BaseLogger:
 
 
     def toggle_solo(self)->bool:
+        "Switch Solo state"
         tog = False
         if not self.solo:
             tog = True
@@ -92,6 +96,8 @@ class BaseLogger:
         return tog
 
     def toggle_mute_all(self)->bool:
+        "Switch processing state"
+
         tog = False
         if not self._mute_all:
             tog = True
@@ -99,6 +105,8 @@ class BaseLogger:
         return tog
 
     def toggle_console(self)->bool:
+        "Switch console log state"
+
         tog = False
         if not self.console:
             tog = True
@@ -106,10 +114,11 @@ class BaseLogger:
         return tog
 
     def toggle_data(self)->None:
-
+        "Switch data log state"
         res = self.formatter.toggle_data()
         self.warning(f"Data Logging is {res}!")
     def toggle_short(self)->None:
+        "Switch between short and long format"
         self.formatter.toggle_short_format()
         self.warning("Short format is Off!")
 
@@ -126,21 +135,6 @@ class BaseLogger:
 
         """
         loglevel = LoggerLevel.DEBUG
-        # qualname = frame.f_code.co_qualname
-        # if qualname[0] == '<':
-        #     qualname = ""
-        # # # self.toggle_to_console
-        # # print("INSPECT FRAME :: ",frame.f_globals)
-        # # print("INSPECT FRAME local :: ",frame.f_locals)
-        # print("INSPECT FRAME local :: ",inspect.getmodule(frame).__name__)
-        # # print("INSPECT FRAME local :: ",inspect.getmodule(frame))
-        # print("INSPECT FRAME local :: ",frame.f_code.co_qualname)
-        # print("INSPECT FRAME local :: ",frame.f_code.co_name)
-        # print("INSPECT FRAME local :: ",inspect.getframeinfo(frame))
-        # print("INSPECT FRAME local :: ",frame.f_lineno)
-        # # print("INSPECT FRAME local :: ",frame.f_code)
-        # # print("INSPECT FRAME local :: ",inspect.getmembers(frame))
-        # # print("INSPECT FRAME buid :: ",inspect.getouterframes(frame))
         frame = inspect.currentframe().f_back
         self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
@@ -211,6 +205,27 @@ class BaseLogger:
 
 @dataclass(init=False)
 class LoggerManager:
+    """
+        Überclass managing the loggers
+
+        Needs MAsterLoggerCache as Registry (derived from Loggercache) and a Baslogger.
+
+        .. tip::
+            Baselogger will be named __root__ and will ALWAYS log, eg. is not impacted by solo, mute, process and console
+            actions. It can be off'd manually like any other Baselogger
+
+        Allowed actions
+            - mute mute_all     : stop processing
+            - unmute mute_all   : resume processing
+            - mute console      : mute terminal output
+            - unmute console    : resume terminal output
+            - unmute data       : stop data processing
+            - mute data         : resume data processing
+
+        .. warning::
+            Mechanism might
+
+    """
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
     _application_name:str = "yail5"
@@ -291,6 +306,10 @@ class LoggerManager:
         self._solo_list.append(name)
 
     def solo_off(self,name:str = None)->None:
+        """
+            Offs the Solo Bus or takes a Logger out of the bus
+
+        """
         if name is None:
             self._solo_on = False
             loggerlist = [x for x in self.rootcache.logger_by_name if x not in self._solo_list]
@@ -301,12 +320,15 @@ class LoggerManager:
             self._solo_list.remove(name)
 
     def mute_logger(self,logger:str)->None:
-        """ Muets the logger, is additive"""
+        """ Mutes the logger, is additive"""
         self._mute_on = True
         self._logger_actions(logger,"mute console")
         self._muted_list.append(logger)
 
     def mute_off(self, name: str = None) -> None:
+        """
+            Offs the Mute Bus or takes a Logger out of the bus
+        """
         if name is None:
             self._mute_on = False
             # loggerlist =  [x for x in self.rootcache.logger_by_name if x not in self._muted_list]
@@ -326,10 +348,19 @@ class LoggerManager:
 
 
     def get_logger_by_name(self,name:str)->LoggerCacheline:
+        """
+            Returns logger by name
+        """
         return self.rootcache.cache_entry_by_name(name)
 
 
     def make_new_logger(self,name:str)->BaseLogger:
+        """
+            Return a new logger with given name and stores it in the registry
+
+            The new logger inherits the Threshhold level from the __root__ logger
+
+        """
         new_logger = BaseLogger(name,self._root_logger,self._root_logger.log_level)
         new_logger.cache.parent_cache = self._root_cache
         self._root_cache.register(new_logger)

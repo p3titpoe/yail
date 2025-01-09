@@ -200,19 +200,29 @@ class Formatter:
 
         How to:
             Uselful formats
-                f"{tag:>10}" -> left align 10
-                f"{tag:<10}" -> right align 10
-                f"{tag:^10}" -> centered 10
-                f"{tag:.10}" -> truncated
+
+            .. code::
+
+                f"{tag:>10}" # left align 10
+                f"{tag:<10}" # right align 10
+                f"{tag:^10}" # centered 10
+                f"{tag:.10}" # truncated
 
             Code
+
+            .. code::
+               :linenos:
+
                 tag = "loglevel value"
                 col_len = structure[tag]
-                tag = tag.replace(" ","_")
+                tag = tag.replace(" ","_") # Conversion to underscore as writing with space is more convenient
                 func = FormTags.by_name(tag.upper())
                 res = func(data) #fetch the data
 
             Almost same, then
+
+            .. code::
+
                 res_len = len(res)   #check how long the str is
                 len_diff = col_len - res_len    #get the len diff between str & col
                 if len_diff >= 0:
@@ -221,6 +231,9 @@ class Formatter:
                     tag_option = f".{col_len}"
 
                 txt = f"{tag:{tag_option}}"
+
+        Also, the formatter should have a .. ::py:class: logic.Registry as to implement different layouts for the different
+        .. ::py:class: logic.LoggerLevel
 
 
     """

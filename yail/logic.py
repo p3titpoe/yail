@@ -1,6 +1,27 @@
 from enum import Enum
 from dataclasses import dataclass,field
 
+class LoggerLevel(Enum):
+    """
+        Lists all the default logger types
+    """
+    INHERIT = 0
+    DEBUG =10
+    INFO = 20
+    WARNING = 30
+    ERROR = 40
+    CRITICAL = 50
+
+
+@dataclass
+class LoggerMessage:
+    """
+        Dataclass representing a
+    """
+    sender: str
+    log_level: LoggerLevel
+    msg: str
+
 @dataclass(repr=False)
 class BaseData:
     """
@@ -228,28 +249,20 @@ class Registry:
 
         return reg_id
 
-class LoggerLevel(Enum):
-    """
-        Lists all the default logger types
-    """
-    INHERIT = 0
-    DEBUG =10
-    INFO = 20
-    WARNING = 30
-    ERROR = 40
-    CRITICAL = 50
-
-
-@dataclass
-class LoggerMessage:
-    sender: str
-    log_level: LoggerLevel
-    msg: str
 
 
 
 @dataclass(repr=False)
 class LoggerCache(Registry):
+    """
+        A resizable Registry holding the last nn messages from this logger.
+
+        Flushes automatically to ?parent? on the next entry if reached the full capacity.
+        eg if len max is 10, will flush on 11.th msg coming in
+
+        .. note::
+            This mechanism has to be refined
+    """
     def register(self, log_msg: LoggerMessage) -> int:
         """
             Register a cache item.
@@ -329,12 +342,19 @@ class LoggerCache(Registry):
         function_name:str = None
 @dataclass
 class LoggerCacheline:
+    """
+        The data stored by MasterLoggerCache
+    """
     logger: object
     name: str = ""
     log_level: LoggerLevel = LoggerLevel.DEBUG
     cache: LoggerCache = None
 
     def __post_init__(self):
+        """
+        | Generates the needed information for the logic of MasterLoggerCache
+        | from
+        """
         self.name = self.logger._name
         self.log_level = self.logger.log_level
         self.cache = self.logger.cache

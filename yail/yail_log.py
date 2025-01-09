@@ -213,7 +213,7 @@ class BaseLogger:
 class LoggerManager:
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
-    _application_name:str = "janetd"
+    _application_name:str = "yail5"
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
@@ -225,7 +225,7 @@ class LoggerManager:
         self._root_logger = BaseLogger('__root__',self,log_level)
         self._root_cache = MasterLoggerCache(200,self)
         # fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::{self._application_name} System ::<<msg>>"
-        fmt= f"<<today>>::<<loggername>>::<<loglevel>>::<<module>>.<<class>>.<<function>>::<<msg>>::<<data>>"
+        fmt= f"<<today>>::<<loggername>>::<<loglevel>>::{self._application_name}.<<class>>.<<function>>::<<msg>>::<<data>>"
         self._root_logger.formatter.replace_format('long',fmt)
     def _logger_actions(self,loggerlist:list,action:str)->bool:
         actions_list:list=["mute mute_all",
@@ -335,6 +335,6 @@ class LoggerManager:
         self._root_cache.register(new_logger)
         return new_logger
 
-
-    def __post_init__(self):
-        print("WWWWWWW")
+    def shutdown(self)->None:
+        self._root_logger.info("YAIL is shuting down!")
+        pass

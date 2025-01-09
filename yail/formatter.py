@@ -227,7 +227,7 @@ class Formatter:
     logger_name:str
     _active_format:str = 'long'
     _format_short:str =(f"<<today>>::<<loggername>>::<<loglevel value>>::<<lineno>> - <<function>>::<<msg>>::<<data>>")
-    _format_long:str =(f"<<isodate>>::<<loggername>>::<<loglevel>>-<<loglevel value>>::<<module>>.<<class>>.<<function>>::<<msg>>::<<data>>")
+    _format_long:str =(f"<<isodate>>::<<loggername>>:: <<lineno>> ::<<loglevel>>:<<module>>.<<class>>.<<function>>::<<msg>>::<<data>>")
     _format_datadict=(f"DATA::<<function>>::<<key>>::<<val>>\n")
     _tags:dict = field(default_factory=dict)
     _short:bool = False

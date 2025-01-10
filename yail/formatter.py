@@ -4,184 +4,32 @@ from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass,field
 from yail.logic import LoggerLevel, Registry
-
-def iso_date(dummy:str)->str:
-    # return datetime.isoformat("YYYY-MM-DD HH:MM:SS")
-    dt = datetime.now()
-    return dt.isoformat("-",timespec='seconds')
-    # return dt.today().date().isoformat()
-
-def today(dummy:str)->str:
-    dt = datetime.now()
-    return dt.today().date().isoformat()
-
-    pass
-def __makesplit(data:inspect.FrameInfo,who:int):
-    tosplt = data.f_code.co_qualname
-    out=False
-    if "." in tosplt:
-        sp = tosplt.split(".")
-        out = sp[who]
-    return out
-
-def package(tosplit:inspect.FrameInfo)->str:
-    txt = tosplit
-    if "." in tosplit:
-        txt =__makesplit(tosplit,0)
-    return txt
-
-def moduul(data:inspect.FrameInfo)->str:
-    name = inspect.getmodule(data).__name__
-    if name == "__main__":
-        name ="root"
-    return name
-
-
-def klass(tosplit:inspect.FrameInfo)->str:
-    nn = __makesplit(tosplit,0)
-    if not nn:
-        nn = ""
-    return nn
-
-def func(data:inspect.FrameInfo,showargs=False,showargsval=False)->str:
-    nn =data.f_code.co_name
-    out:str = ""
-    if nn[0] not in ["","_","<"]:
-        out += f"{nn}("
-        if showargs:
-            args = inspect.getargs(data.f_code)
-            for arg in args.args:
-                val = data.f_locals[arg]
-                if arg != 'self':
-                    out += f"{arg}"
-                    if showargsval:
-                        out += f" = {data2str(data.f_locals[arg])}"
-                    out += ","
-            out = out[:-1]
-        out += ")"
-    return out
-
-def func_args(data:inspect.FrameInfo)->str:
-    return func(data=data,showargs=True)
-def func_argsval(data:inspect.FrameInfo)->str:
-    return func(data=data,showargs=True,showargsval=True)
-
-def msg(inp:str)->str:
-    return inp
-
-def data2str(data:any)->str:
-
-    def datastr(data:list)->str:
-        return data[0]
-    def dataint(data:list)->str:
-        return f"{data[0]}"
-
-    def datalist(data:list)->str:
-        txt = f""
-        # print("DADA ::",data)
-        str_data = [str(x) for x in data[0]]
-        lst = f",".join(str_data)
-        txt += f'{str(str_data):>10}'
-        return txt
-
-    def datadict(data:list)->str:
-        # txt = f"\n"
-        max_field_len=10
-        full_fields = False
-        first_line_same = False
-        first = True
-        txt = f"" if first_line_same else f"\n"
-        for k,v in data[0].items():
-            line: str = data[1]
-            val = str(v)
-            if first:
-                if first_line_same:
-                    line = line.replace(" ","")
-                first = False
-            if full_fields:
-                max_field_len = len(val)
-            val = val[:max_field_len]
-            if not full_fields and len(val)>=max_field_len:
-                val += "..."
-            itr = [("key",k),("val",val)]
-            for x in itr:
-                line = replace_tag_in_format(line,x[0],x[1])
-            txt += line
-        return txt[:-1]
-
-    def datanone(data:any)->str:
-        name = ""
-        if data is not None:
-            name = f"{data[0].__class__.__name__.__repr__()}"
-            # print(name,data)
-        return name
-
-    map:dict ={
-        int:dataint,
-        str:datastr,
-        list:datalist,
-        dict:datadict,
-        'none':datanone
-    }
-    if data[0] == None or data is not isinstance(data,l):
-        return ""
-    else:
-        typ = type(data[0])
-        if typ in map:
-            func_to_call  = map[typ]
-        else:
-            func_to_call = map['none']
-        return func_to_call(data)
-
-def loglevel2str(data:LoggerLevel)->str:
-    out = str(data.name)
-    return out
-def loglevel2val(data:LoggerLevel)->str:
-    out = str(data.value)
-    return out
-    #
-def lineno(data:inspect.FrameInfo)->str:
-    return str(data.f_lineno)
+from yail.formatter_func import *
 
 class FormTags(Enum):
-    ISODATE = iso_date
-    TODAY = today
-    PACKAGE = package
-    MODULE = moduul
-    CLASS = klass
-    FUNCTION = func
-    FUNCTION_ARGS = func_args
-    FUNCTION_ARGSVAL = func_argsval
-    MSG = msg
-    DATA = data2str
-    LOGLEVEL = loglevel2str
-    LOGLEVEL_NAME = loglevel2str
-    LOGLEVEL_VALUE = loglevel2val
-    LINENO = lineno
+    DATE = date_func
+    PACKAGE = package_func
+    MSG = msg_func
+    DATA = data_func
+    LOGLEVEL = loglevel_func
+    LINENO = lineno_func
+    LOGGER = logger_func
+
 
     @classmethod
     def by_name(cls, name: str):
         att = getattr(cls, name)
         return att
 
-def replace_tag_in_format(form:str, tag:str, repl: str)->str:
-    tosearch = f"<<{tag}>>"
-    if tosearch in form:
-        form = form.replace(tosearch, repl)
-    return form
-
-def replace_taglist_in_format(form:str,data:dict)->str:
-    for k,v in data.items():
-        form = replace_tag_in_format(form,k,v)
-    return form
-
-def get_tags(form:str) -> list:
+def get_tags_old(form:str) -> list:
     re_blob = re.compile('<<([a-z]+ ?[a-z]+)>>')
     # re_blob = re.compile('<<([a-z]+ [a-z]+)>>')
     out =  re.findall(re_blob,form)
     return out
 
-ccc=">12"
+
+
+
 @dataclass
 class FormatterTag:
     """
@@ -199,16 +47,16 @@ class FormatterTag:
 
     name:str
     replace: str = ""
-    align: str ="l"
+    column_align: str ="c"
     _column_width: int = 0
     _fixed: bool = True
     _fmt: str = ""
     _is_to_long:bool = False
     _filler_len:int = 0
     _filler = " "
-    _align_dict = {'l':'<',
-                   'c': '<',
-                   'r': '<'
+    _align_dict = {'l': '<',
+                   'c': '^',
+                   'r': '>'
                    }
     cnt:int = 0
     def __post_init__(self):
@@ -219,6 +67,7 @@ class FormatterTag:
         """
             Sets the appropriate flag for compiling output
         """
+        # print("REPL :: ", self.replace)
         repl_len = len(self.replace)
         if  repl_len > self.column_width:
             self._is_to_long = True
@@ -247,132 +96,253 @@ class FormatterTag:
     def compile(self)->str:
         fmt: str =""
         if self._fixed:
-            # print(f"Compile :: {self._fixed}")
             if self._is_to_long:
-                # print(f"Compile :: is too long {self._is_to_long}")
-
                 fmt = f"{self.replace:.{self.column_width}}"
-                # fmt = f"{self.replace:.4}"
+                if self.name == 'package':
+                    startpos = len(self.replace)+3 - self.column_width
+                    if startpos < 0:
+                        startpos = 0
+                    new_repl ="".join([x for x in self.replace[startpos:]])
+                    align_str = self._align_dict[self.column_align]
+                    fmt = f"{new_repl:{self._filler}{align_str}{self._column_width}}"
+
             if self.replace != "" and not self._is_to_long:
-                # print(f"Compile :: Not too long")
+                align_str = self._align_dict[self.column_align]
+                fmt = f"{self.replace:{self._filler}{align_str}{self._column_width}}"
 
-                align_str = self._align_dict[self.align]
-                # padding = self._filler+align_str+self._filler_len
-                fmt = f"{self.replace:{self._filler}{align_str}{self._filler_len}}"
-                # print(fmt)
         else:
-            # print(f"Compile :: Else close")
-
             fmt = f"{self.replace}"
 
         return fmt
 
+@dataclass
+class FormatterTagStruct:
+    """
+        Configuration class for FormatterTag
+    """
+    formtag:str = ""
+    column_width:str = 0
+    column_align:str ="l"
+    args:list = field(init=False,default_factory=list)
+
+    def __post_init__(self):
+        self.column_width = int(self.column_width)
 
 @dataclass
 class FormatterConfig:
     """
         Holds the formats for loglevel
     """
-    module_separator: str = "."
     columns_separator: str = "::"
-    default_active:list = field(init=False,default_factory=list)
-    default_short:list = field(init=False,default_factory=list)
-    default_long:list = field(init=False,default_factory=list)
-
-    log_debug:list = field(init=False,default_factory=list)
-    log_info:list = field(init=False,default_factory=list)
-    log_warning:list = field(init=False,default_factory=list)
-    log_error:list = field(init=False,default_factory=list)
-    log_critical:list = field(init=False,default_factory=list)
-    log_fatal:list = field(init=False,default_factory=list)
-
-    _package_mebers: list = field(init=False, default_factory=list)
+    _default_cols_len:list = field(init=False, default_factory=list)
+    _init_short:str = "date today|26:logger name|20:loglevel name|10"
+    _init_long:str = (f"date iso:logger name|8 c:loglevel name|8:"
+                      f"lineno pad4|6 c:package mcf args|33 l:"
+                      f"msg|70")
+    _init_default_attr:str ="active short long"
+    _init_log_attr:str ="debug info warning error critical fatal"
+    _lib: dict = field(init=False,default_factory=dict)
+    _package_members: list = field(init=False, default_factory=str)
+    _short:bool = False
     def __post_init__(self):
-        self.default_active = []
-        self.default_short = ['date today','loggername','loglevel','module','function','msg']
-        self.default_long = ['isodate','loggername','loglevel','module','class','function','msg']
-
-        self.log_debug = ['date isodate','loggername','loglevel','module','class','function','lineno','msg','data']
-        self.log_info = self.default_long
-        self.log_warning = self.default_long
-        self.log_error = self.default_long
-        self.log_critical = self.default_long
-        self.log_fatal = self.default_long
         self._package_members = ['package','module','class','function']
+
+        def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
+        def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
+        for x in def_list:
+            if x == "default_short":
+                self._tokenize_fmt(x,self._init_short)
+            else:
+                self._tokenize_fmt(x,self._init_long)
+
+
+    def _tokenize_fmt(self,name:str, configline:str)->list[FormatterTagStruct]:
+        tokens = make_tagconfs_from_confline(configline)
+        self._lib[name]: list[FormatterTagStruct] = tokens
+        if name == "default_long":
+            cols = self._extract_colwidths(tokens)
+            if cols != self._default_cols_len:
+                self._default_cols_len = cols
+
+    def _return_conf(self,name:str)->list[FormatterTagStruct]:
+        if name in self._lib:
+            tokens = self._lib[name]
+            cols = self._extract_colwidths(tokens)
+            act_cols = cols
+            if cols != self._default_cols_len:
+                act_cols = self._default_cols_len
+            for i,x in enumerate(tokens):
+                x.column_width = act_cols[i]
+
+            return tokens
+
+    def _extract_colwidths(self,tokens:list[FormatterTagStruct])->None:
+        tmp=[x.column_width for x in tokens]
+        return tmp
+
+    @property
+    def default_long(self)->list[FormatterTagStruct]:
+        return self._return_conf('default_long')
+
+    @default_long.setter
+    def default_long(self, value:str)->None:
+        self._tokenize_fmt('default_long',value)
+        if not self._short:
+            self._lib['default_active'] = self._lib['default_long']
+
+    @property
+    def default_short(self)->list[FormatterTagStruct]:
+        return self._return_conf('default_short')
+
+    @default_short.setter
+    def default_short(self, value):
+        self._tokenize_fmt('default_short', value)
+        if not self._short:
+            self._lib['default_active'] = self._lib['default_long']
+
+
+    @property
+    def default_active(self)->list[FormatterTagStruct]:
+        return self._return_conf('default_active')
+
+    @default_active.setter
+    def default_active(self, value):
+        self._tokenize_fmt('default_active', value)
+    @property
+    def log_debug(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_debug')
+
+    @log_debug.setter
+    def log_debug(self, value):
+        self._tokenize_fmt('log_debug', value)
+
+
+    @property
+    def log_info(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_info')
+
+    @log_info.setter
+    def log_info(self, value):
+        self._tokenize_fmt('log_info', value)
+
+    @property
+    def log_warning(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_warning')
+
+    @log_warning.setter
+    def log_warning(self, value):
+        self._tokenize_fmt('log_warning', value)
+
+
+    @property
+    def log_error(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_error')
+
+    @log_error.setter
+    def log_error(self, value):
+        self._tokenize_fmt('log_error', value)
+    @property
+    def log_critical(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_critical')
+
+    @log_critical.setter
+    def log_critical(self, value):
+        self._tokenize_fmt('log_critical', value)
+
+    @property
+    def log_fatal(self)->list[FormatterTagStruct]:
+        return self._return_conf('log_fatal')
+
+    @log_fatal.setter
+    def log_fatal(self, value):
+        self._tokenize_fmt('log_fatal', value)
+
 
     @property
     def package_members(self)->list:
         return self._package_members
 
+    def toggle_short_format(self)->str:
+        """
+            Toggles sgort format on / off
+        """
+        # sw = False
+        # if not self._short:
+        #     sw = True
+        self._short = True if not self._short else False
+        self.default_active = self.default_long if not self._short else self.default_short
 
 @dataclass
 class Formatter:
     """
         Formats the log string
 
-    .. note::
-        This needs refactoring to accomodate for a column aproached structure of the messages.
+        format strings look like this
+            "date today|20:logger name|20 c:loglevel name"
 
-        The idea is to pass a dicr as structre and to build it from there instead like now,
-        definig the string and fiddle with it.
+        - ":" a colon delimits tokens.
+        - "|" a pipe delimits columns settings inside the token
+        - " " a space separates options
 
-        The dict should be structured like this
+        .. note::
+            Trailing colons ":" and spaces " " are not stripped.
 
-            name_of_option : length of the column
-            ("loglevel value":40,)
+        Token repesentation:
+            "[[tag] [options]*n|[column width] [column alignment]]"
 
-        How to:
-            Uselful formats
 
-            .. code::
 
-                f"{tag:>10}" # left align 10
-                f"{tag:<10}" # right align 10
-                f"{tag:^10}" # centered 10
-                f"{tag:.10}" # truncated
+        Allowed tags & Options:
 
-            Code
+            - date
 
-            .. code::
-               :linenos:
+                * today - date.today "YYYY-MM-DD"
+                * isodat - date.now.isoformat "YYYY-MM-DD HH:MM:SS"
 
-                tag = "loglevel value"
-                col_len = structure[tag]
-                tag = tag.replace(" ","_") # Conversion to underscore as writing with space is more convenient
-                func = FormTags.by_name(tag.upper())
-                res = func(data) #fetch the data
+                Ex:
+                    | date today
 
-            Almost same, then
+            - package
 
-            .. code::
+                * pmcf - PackageModuleClassFunction - abbreviation for .settinggs
+                * args - show args
+                * argsval -show args & value
 
-                res_len = len(res)   #check how long the str is
-                len_diff = col_len - res_len    #get the len diff between str & col
-                if len_diff >= 0:
-                    tag_option = f">{len_diff}"
-                else:
-                    tag_option = f".{col_len}"
+                Ex:
+                    | package mcf args #hides package
+                    | package cf argsval #hides package & module
 
-                txt = f"{tag:{tag_option}}"
+            - msg
+                * None
 
-        Also, the formatter should have a .. ::py:class: logic.Registry as to implement different layouts for the different
-        .. ::py:class: logic.LoggerLevel
+            - data
+                * None
 
+            - loglevel
+                * name
+                * value
+
+            - lineno
+                * pad1(0*n) = number padding
+
+                Ex:
+                    * lineno pad1 #01
+                    * lineno pad1 #100
+                    * lineno pad4 #00001
+                    * package cf argsval #hides package & module
+
+            - logger
+                * None
 
     """
     logger_name:str
     _conf: FormatterConfig = field(default_factory=FormatterConfig)
-    _active_format:str = 'long'
-    _format_short:str =(f"<<today>>::<<loggername>>::<<loglevel value>>::<<lineno>> - <<function>>::<<msg>>::<<data>>")
-    _format_long:str =(f"<<isodate>>::<<loggername>>:: <<lineno>> ::<<loglevel>>:<<module>>.<<class>>.<<function>>::<<msg>>")
-    _format_datadict=(f"DATA::<<function>>::<<key>>::<<val>>\n")
     _tags:dict = field(default_factory=dict)
-    _short:bool = False
-    _show_data:bool = True
+    _col_lens:dict = field(default_factory=dict)
 
     def __post_init__(self):
-        self._active_format = self._format_long if not self._short else self._format_short
-        self._active_format = replace_tag_in_format(self._active_format,'loggername',self.logger_name)
+        pass
+
     def _check_tags(self,taglist: list)->dict:
         """
             Convert tag list from format to a dict with tag : Formtag.
@@ -393,35 +363,28 @@ class Formatter:
     @property
     def format(self)->str:
         return self._active_format
+    @property
+    def conf(self):
+        return self._conf
+
     def toggle_short_format(self)->str:
         """
             Toggles sgort format on / off
         """
-        # sw = False
-        # if not self._short:
-        #     sw = True
-        self._short = True if not self._short else False
-        self._active_format = self._format_long if not self._short else self._format_short
-
-        return self._short
+        self._conf.toggle_short_format()
+        return self._conf.default_active
 
     def toggle_data(self)->bool:
         self._show_data = True if not self._show_data else False
         return self._show_data
 
-    def seek_and_replace_taglist_in_format(self,form:str,data:dict)->str:
-        taglist = self.get_tags()
-        for tag in taglist:
-            if tag in data:
-                form = replace_tag_in_format(form,tag,data[tag])
-        return form
 
     def get_tags(self,form:str = None) -> list:
         fmt = form
         if fmt is None:
-            fmt =self.format
-        out = get_tags(fmt)
-        return out
+            fmt =self._conf.default_active
+        return fmt
+
     def replace_format(self,which:str,fmt:str)->None:
         """
             Replace one of the format strings
@@ -433,94 +396,69 @@ class Formatter:
         if which in allowed:
             setattr(self,f"_format_{which}",fmt)
             setattr(self,f"_active_format",fmt)
-            self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
+            # self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
 
     def compile_new(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
         form = self.get_tags()
         conf = self._conf
-        form = conf.default_long
-        form_tags = self._check_tags(form)
+        val_table={ 'msg':msg,
+                    'loglevel':loglevel,
+                    'data':data,
+                    'logger':'TEST',
+                    'frame':frame
+                    }
+
         out=""
-        for tag in form:
-            if tag != 'loggername':
-                f = tag.split(" ")[0] if len(tag.split(" ")) == 2 else tag
-                func = FormTags.by_name(form_tags[tag])
-                form_data = frame
-                if f == "msg":
-                    form_data = msg
-                elif "loglevel" in f:
-                    form_data = loglevel
-                else:
-                    form_data = frame
-                res = func(form_data)
-                # print(res)
-                composite = FormatterTag(tag,res)
+        for i,tagstruct in enumerate(form):
+            func = FormTags.by_name(tagstruct.formtag.upper())
+            form_data = frame
+            if tagstruct.formtag in val_table:
+                form_data = val_table[tagstruct.formtag]
+            res = func(form_data,*tagstruct.args)
 
-            else:
-                composite = FormatterTag(tag,self.logger_name)
+            composite = FormatterTag(tagstruct.formtag,res)
+            composite.set_column_width(tagstruct.column_width)
+            composite.column_align = tagstruct.column_align
 
-            # print(composite)
-            if tag not in self._conf.package_members:
-                composite.set_column_width(10)
-
-            # print(composite)
             sep = self._conf.columns_separator
-            if tag in self._conf.package_members:
-                sep = self._conf.module_separator
-            if tag =='loglevel':
-                print(composite)
+
             tmp = f"{composite.compile()}{sep}"
+            if i == len(form)-1:
+                tmp = tmp[:-2]
             out += tmp
 
         return out
 
 
+def make_tagconfs_from_confline(form:str)->list[FormatterTagStruct]:
+    options = []
+    command = ""
+    out =[]
+    #Break up the token
+    configlines = form.split(":")
+    for line in configlines:
+        tagstruct = FormatterTagStruct()
+        #check for column width
+        sp = line.split("|")
+        command = sp[0]
+        if len(sp) == 2:
+            # command = sp[0]
+            col_options = sp[1].split()
+            tagstruct.column_width = int(col_options[0])
+            if len(col_options) == 2:
+                tagstruct.column_align = col_options[1]
 
+        command_test = command.split(" ")
+        if len(command_test) > 1:
+            command = command_test[0]
+            options = command_test[1:]
 
+        tagstruct.formtag = command
+        tagstruct.args = options
+        out.append(tagstruct)
+    return out
 
-
-    def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
-        out_msg = ""
-        # composite=self.format
-        form = self.get_tags()
-        # if not self._show_data:
-        #     form.remove('data')
-        #     composite = composite[:-8]
-
-        form_tags = self._check_tags(form)
-
-        for tag in form:
-            res:str = ""
-            f = tag.split(" ")[0] if len(tag.split(" ")) == 2 else tag
-            func = FormTags.by_name(form_tags[tag])
-            form_data = frame
-            if f == "msg":
-                form_data = msg
-
-            elif f == "data":
-                # sp = composite.split("::")
-                cnt = []
-                limit = -2 if not self._short else -1
-                # cnt.extend([" " for x in range(len(composite)-2)])
-                spacer = "".join(cnt[:-6])
-                fmt = replace_tag_in_format(self._format_datadict,'function',FormTags.FUNCTION(frame))
-                # print("FFFFF",FormTags.FUNCTION(frame))
-                # print("FFFFF",fmt)
-                ff = f"{spacer}{fmt}"
-                form_data=[data,ff]
-
-            elif "loglevel" in f:
-                form_data = loglevel
-            else:
-                form_data = frame
-            # if f != data:
-            res = func(form_data)
-            # print(res)
-            composite = FormatterTag(tag,res)
-
-            # print(res)
-            # composite = replace_tag_in_format(composite,tag,res)
-
-
-        return  composite
+def tstfunc():
+    fmt = Formatter("DDD")
+    return fmt.compile_new("TEST", inspect.currentframe(), LoggerLevel.DEBUG)

@@ -1,30 +1,52 @@
 import inspect
+
+import testing.nested.nested
 import yail as logger
 import yail.formatter
 from yail.logic import LoggerLevel,LoggerMessage
 from testing.models import testclass,testclassb
+from testing.nested.innernested.blested import  nestedclass
 
 hh =logger.get_logger("OOOOO")
 
 fmt = yail.formatter.Formatter("Test")
+oo = testclassb()
+class testclassc:
+    def __init__(self, bb="WWWW"):
+        self.ar = bb
+        # cc.debug("Init Testclassc")
+
+    def harrr(self):
+        msg = "This is a veryyyy loooong sentence,just to check how the it displays in the colnsole,considering allmeans."
+        return fmt.compile_new(msg, inspect.currentframe(), LoggerLevel.DEBUG)
+    def haha(self):
+        # fmt.conf.default_long = "loglevel name:msg"
+        return fmt.compile_new("Vlasr", inspect.currentframe(), LoggerLevel.WARNING)
+
+nn = testclassc()
 
 def testfunc()->any:
     return fmt.compile_new("TEST",inspect.currentframe(),LoggerLevel.DEBUG)
 
-for x in range (0,5):
+# for x in range (0,1):
+vv = testing.nested.nested.nestedclass()
+ll = testing.nested.innernested.blested.nestedclass()
+mm = testfunc()
+ddd = nestedclass()
+print(mm)
+print(nn.harrr())
+print(nn.haha())
+print(oo.blas(8,8))
+print(yail.formatter.tstfunc())
+print(vv.nestedBlas(3,3,3))
+# print(nestedclass.nestedBlas(2,2,2))
+# print(f"{mm.compile()},mm")|____
 
-    mm = testfunc()
-    print(mm)
-# print(f"{mm.compile()},mm")
 
+
+#
 #LOGGGER TESTING
-#
-# class testclassc:
-#     def __init__(self, bb="WWWW"):
-#         self.ar = bb
-#         cc.debug("Init Testclassc")
-#
-#
+
 # logger.debug("restarting processing")
 # logger.muteoff()
 # ff = testclassc()

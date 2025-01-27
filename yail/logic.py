@@ -255,7 +255,7 @@ class Registry:
 @dataclass(repr=False)
 class LoggerCache(Registry):
     """
-        A resizable Registry holding the last nn messages from this logger.
+        A resizable Registry holding the last nn messages from a logger.
 
         Flushes automatically to ?parent? on the next entry if reached the full capacity.
         eg if len max is 10, will flush on 11.th msg coming in

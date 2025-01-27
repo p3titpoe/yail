@@ -32,6 +32,19 @@ def mute(name:str = None)->None:
     else:
         LOGGER.mute_logger(name)
 
+def stop_processing(name:str | None)->None:
+    if name is None:
+        warning("Logger will stop all processing!!!")
+        LOGGER.stop_processing_all()
+    else:
+        LOGGER.stop_processing(name)
+def resume_processing(name:str|None)->None:
+    if name is None:
+        warning("Logger will stop all processing!!!")
+        LOGGER.stop_processing_all()
+    else:
+        LOGGER.stop_processing(name)
+        info(f"Resuming processing of logger {name}")
 
 ##############################################################
 # convennience functions for logging to root loggger

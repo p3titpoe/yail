@@ -338,6 +338,22 @@ class LoggerManager:
             self._logger_actions([name], "unmute console")
             self._muted_list.remove(name)
 
+    def stop_processing_all(self)->None:
+        loggerlist=[x for x in self.rootcache.logger_by_name ]
+        self._logger_actions(loggerlist, "mute mute_all")
+
+    def stop_processing(self,name:str)->None:
+        self._logger_actions([name], "mute mute_all")
+
+    def resume_processing(self,name:str = None)->None:
+        if name is None:
+            loggerlist = [x for x in self.rootcache.logger_by_name]
+            self._logger_actions(loggerlist,"unmute mute_all")
+        else:
+            self._logger_actions([name],"unmute mute_all")
+
+
+
     @property
     def rootcache(self)->MasterLoggerCache:
         return self._root_cache

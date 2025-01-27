@@ -399,7 +399,7 @@ class Formatter:
             # self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
 
-    def compile_new(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
+    def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
         form = self.get_tags()
         conf = self._conf
         val_table={ 'msg':msg,

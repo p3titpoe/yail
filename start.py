@@ -2,7 +2,7 @@ import inspect
 
 import testing.nested.nested
 import yail as logger
-import yail.formatter
+import yail.formatter.formatter
 from yail.logic import LoggerLevel,LoggerMessage
 from testing.models import testclass,testclassb
 from testing.nested.innernested.blested import  nestedclass
@@ -21,13 +21,14 @@ class testclassc:
         # cc.debug("Init Testclassc")
 
     def harrr(self):
-        msg = "This is a veryyyy loooong sentence,just to check how the it displays in the colnsole,considering allmeans."
-        hh.info(msg)
+        msg = ("This is a veryyyy loooong sentence,just to check how the it displays in the colnsole,considering allmeans."
+               ",just to check how the it displays in the colnsole,considering allmeans.")
+        hh.debug(msg)
 
     def haha(self):
         # fmt.conf.default_long = "loglevel name:msg"
         hh.info("vvvvvvv")
-        logger.debug("mnbmnb")
+        logger.debug("mnbmnb",{2:45,4:"tztut",0:"loki"})
 
 
 nn = testclassc()

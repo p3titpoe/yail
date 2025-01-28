@@ -61,8 +61,74 @@ def package_func_functions(frame, show:str)->str:
 def msg_func(*args)->str:
     return args[0]
 
-def data_func(data:any):
-    pass
+def data_func(*args):
+
+        def datastr(data: list) -> str:
+            return data[0]
+
+        def dataint(data: list) -> str:
+            return f"{data}"
+
+        def datalist(data: list) -> str:
+            txt = f""
+            # print("DADA ::",data)
+            str_data = [str(x) for x in data[0]]
+            lst = f",".join(str_data)
+            txt += f'{str(str_data):>10}'
+            return txt
+
+        def datadict(data: list) -> str:
+            # txt = f"\n"
+            max_field_len = 10
+            full_fields = False
+            first_line_same = False
+            first = True
+            txt = f"" if first_line_same else f"\n"
+            for k, v in data.items():
+                line: str = ""
+                val = str(v)
+                if first:
+                    if first_line_same:
+                        line = line.replace(" ", "")
+                    first = False
+                if full_fields:
+                    max_field_len = len(val)
+                val = val[:max_field_len]
+                if not full_fields and len(val) >= max_field_len:
+                    val += "..."
+                itr = [("key", k), ("val", val)]
+                # for x in itr:
+                #     line = replace_tag_in_format(line, x[0], x[1])
+                txt += line
+            return txt[:-1]
+
+        def datanone(data: any) -> str:
+            name = ""
+            if data is not None:
+                name = f"{data[0].__class__.__name__.__repr__()}"
+                # print(name,data)
+            return name
+
+        map: dict = {
+            int: dataint,
+            str: datastr,
+            list: datalist,
+            dict: datadict,
+            'none': datanone
+        }
+
+        if args[0] == None :
+            return ""
+        else:
+            typ = type(args[0])
+            if typ in map:
+                func_to_call = map[typ]
+            else:
+                func_to_call = map['none']
+            print("FFFFFFFFFFF ::", func_to_call)
+
+            return func_to_call(args[0])
+
 
 def loglevel_func(level:LoggerLevel,what:str)->str:
     out:dict ={'name':level.name,

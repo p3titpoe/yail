@@ -3,9 +3,10 @@ import inspect
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass,field
+from importlib import import_module
 from yail.logic import LoggerLevel, Registry
-from yail.formatter_func import *
-
+import yail.formatter.base_template as base_templ
+from .formatter_func import *
 
 class FormTags(Enum):
     DATE = date_func
@@ -151,14 +152,19 @@ class FormatterConfig:
         def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
         def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
         for x in def_list:
-            if x == "default_short":
-                self._tokenize_fmt(x,self._init_short)
-            else:
-                self._tokenize_fmt(x,self._init_long)
+            if hasattr(base_templ,x):
+                self._tokenize_fmt(x,getattr(base_templ,x))
+        self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
+        # if x == "default_short":
+            #     self._tokenize_fmt(x,self._init_short)
+            # else:
+            #     self._tokenize_fmt(x,self._init_long)
 
 
     def _tokenize_fmt(self,name:str, configline:str)->list[FormatterTagStruct]:
+
         tokens = make_tagconfs_from_confline(configline)
+
         self._lib[name]: list[FormatterTagStruct] = tokens
         if name == "default_long":
             cols = self._extract_colwidths(tokens)
@@ -170,14 +176,16 @@ class FormatterConfig:
             tokens = self._lib[name]
             cols = self._extract_colwidths(tokens)
             act_cols = cols
-            if cols != self._default_cols_len:
-                act_cols = self._default_cols_len
+            # print(act_cols)
+
+            # if cols != self._default_cols_len:
+            #     act_cols = self._default_cols_len
             for i,x in enumerate(tokens):
                 x.column_width = act_cols[i]
 
             return tokens
 
-    def _extract_colwidths(self,tokens:list[FormatterTagStruct])->None:
+    def _extract_colwidths(self,tokens:list[FormatterTagStruct])->list:
         tmp=[x.column_width for x in tokens]
         return tmp
 
@@ -272,7 +280,16 @@ class FormatterConfig:
         self._short = True if not self._short else False
         self.default_active = self.default_long if not self._short else self.default_short
 
+    def fmt_by_loglevel(self,loglevel:LoggerLevel):
+        fmt_name = f"log_{loglevel.name.lower()}"
+        fmt = self._return_conf(fmt_name)
+        # print(f"FMT:::   {fmt_name}")
+        return fmt
+
+
     def use_custom_template(self,path_to_file:str)->None:
+        path_to_file = "/mnt/data/Coding/yail/yail/formatter/base_template.py"
+
         pass
 
 @dataclass
@@ -382,10 +399,12 @@ class Formatter:
         return self._show_data
 
 
-    def get_tags(self,form:str = None) -> list:
-        fmt = form
-        if fmt is None:
+    def get_tags(self,form:LoggerLevel = None) -> list:
+        fmt:list = []
+        if form is None:
             fmt =self._conf.default_active
+        else:
+            fmt = self._conf.fmt_by_loglevel(form)
         return fmt
 
     def replace_format(self,which:str,fmt:str)->None:
@@ -403,7 +422,8 @@ class Formatter:
 
 
     def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
-        form = self.get_tags()
+        form = self.get_tags(loglevel)
+        # print(form)
         conf = self._conf
         val_table={ 'msg':msg,
                     'loglevel':loglevel,
@@ -414,6 +434,8 @@ class Formatter:
 
         out=""
         for i,tagstruct in enumerate(form):
+            # print(form)
+
             func = FormTags.by_name(tagstruct.formtag.upper())
             form_data = frame
             if tagstruct.formtag in val_table:

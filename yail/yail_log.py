@@ -2,7 +2,7 @@ import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
 from .logic import *
-from .formatter import Formatter
+from .formatter.formatter import Formatter
 
 
 

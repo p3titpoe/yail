@@ -1,8 +1,8 @@
 import inspect
 import yail as logger
-from yail.formatter import Formatter
+# from yail.formatter import Formatter
 from yail.logic import LoggerLevel
-fmt = logger.formatter.Formatter("Test")
+# fmt = logger.formatter.Formatter("Test")
 
 log = logger.get_logger('test2')
 class nestedclass:
@@ -12,6 +12,6 @@ class nestedclass:
 
     def nestedBlas(self,x:int,y:int,z:int):
         data = x*y*z
-        # log.debug("Mulitplicated",loggger_msg_data=data)
-        return fmt.compile_new("TEST", inspect.currentframe(), LoggerLevel.DEBUG)
+        log.debug("Mulitplicated",loggger_msg_data=data)
+        # return fmt.compile_new("TEST", inspect.currentframe(), LoggerLevel.DEBUG)
 

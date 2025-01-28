@@ -14,7 +14,7 @@ logger.warning("BLAAA")
 hh.debug("trztrztrztrzt")
 
 # fmt = yail.formatter.Formatter("Test")
-# oo = testclassb()
+oo = testclassb()
 class testclassc:
     def __init__(self, bb="WWWW"):
         self.ar = bb
@@ -32,6 +32,7 @@ class testclassc:
 
 nn = testclassc()
 nn.harrr()
+nn.haha()
 # def testfunc()->any:
 #     return fmt.compile_new("TEST",inspect.currentframe(),LoggerLevel.DEBUG)
 #
@@ -43,7 +44,7 @@ nn.harrr()
 # print(mm)
 # print(nn.harrr())
 # print(nn.haha())
-# print(oo.blas(8,8))
+oo.blas(8,8)
 # print(yail.formatter.tstfunc())
 # print(vv.nestedBlas(3,3,3))
 # # print(nestedclass.nestedBlas(2,2,2))

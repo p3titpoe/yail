@@ -11,7 +11,7 @@ class BaseLogger:
         Base interactive cached Logger class
 
         Needs LoggerCache & Formatter, Parent should be a loggermanager
-
+        #
         Exposes log functions for the different levels
     """
     parent: any
@@ -43,6 +43,7 @@ class BaseLogger:
         """
         module_name = __name__
         act_fram = frame
+
         if external_frame is not None:
             act_fram = external_frame
         msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
@@ -135,6 +136,8 @@ class BaseLogger:
 
         """
         loglevel = LoggerLevel.DEBUG
+        # frame = external_frame
+        # if frame is None:
         frame = inspect.currentframe().f_back
         self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 

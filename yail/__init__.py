@@ -54,28 +54,28 @@ def debug(info: str, loggger_msg_data: any = None) -> None:
         Calls on root logger
     """
     frame = currentframe().f_back
-    LOGGER._root_logger.debug(info,loggger_msg_data)
+    LOGGER._root_logger.debug(info,loggger_msg_data,external_frame=frame)
 
 def info(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
     frame = currentframe().f_back
-    LOGGER._root_logger.info(info,loggger_msg_data,frame)
+    LOGGER._root_logger.info(info,loggger_msg_data,frame,external_frame=frame)
 
 def warning(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
     frame = currentframe().f_back
-    LOGGER._root_logger.warning(info,loggger_msg_data)
+    LOGGER._root_logger.warning(info,loggger_msg_data,external_frame=frame)
 
 def error(info: str, loggger_msg_data: any = None) -> None:
     """
         Calls on root logger
     """
     frame = currentframe().f_back
-    LOGGER._root_logger.error(info,loggger_msg_data)
+    LOGGER._root_logger.error(info,loggger_msg_data,external_frame=frame)
 
 
 def critical(info: str, loggger_msg_data: any = None) -> None:
@@ -83,6 +83,6 @@ def critical(info: str, loggger_msg_data: any = None) -> None:
         Calls on root logger
     """
     frame = currentframe().f_back
-    LOGGER._root_logger.critical(info,loggger_msg_data)
+    LOGGER._root_logger.critical(info,loggger_msg_data,external_frame=frame)
 
 

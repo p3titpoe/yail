@@ -6,6 +6,7 @@ from dataclasses import dataclass,field
 from yail.logic import LoggerLevel, Registry
 from yail.formatter_func import *
 
+
 class FormTags(Enum):
     DATE = date_func
     PACKAGE = package_func
@@ -137,8 +138,8 @@ class FormatterConfig:
     _default_cols_len:list = field(init=False, default_factory=list)
     _init_short:str = "date today|26:logger name|20:loglevel name|10"
     _init_long:str = (f"date iso:logger name|8 c:loglevel name|8:"
-                      f"lineno pad4|6 c:package mcf args|33 l:"
-                      f"msg|70")
+                      f"lineno pad4|13 c:package mcf args|33 l:"
+                      f"msg|100")
     _init_default_attr:str ="active short long"
     _init_log_attr:str ="debug info warning error critical fatal"
     _lib: dict = field(init=False,default_factory=dict)
@@ -233,7 +234,6 @@ class FormatterConfig:
     def log_warning(self, value):
         self._tokenize_fmt('log_warning', value)
 
-
     @property
     def log_error(self)->list[FormatterTagStruct]:
         return self._return_conf('log_error')
@@ -271,6 +271,9 @@ class FormatterConfig:
         #     sw = True
         self._short = True if not self._short else False
         self.default_active = self.default_long if not self._short else self.default_short
+
+    def use_custom_template(self,path_to_file:str)->None:
+        pass
 
 @dataclass
 class Formatter:
@@ -405,7 +408,7 @@ class Formatter:
         val_table={ 'msg':msg,
                     'loglevel':loglevel,
                     'data':data,
-                    'logger':'TEST',
+                    'logger':self.logger_name,
                     'frame':frame
                     }
 

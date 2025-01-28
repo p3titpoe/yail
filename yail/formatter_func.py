@@ -73,10 +73,10 @@ def lineno_func(frame:inspect.FrameInfo,*args):
     linenr = frame.f_lineno
     mr = args[0].split('pad')
     nr = 0 if len(mr) != 2 else mr[1]
-    fmt =f"{linenr}"
+    fmt = f"{linenr}"
     if nr != 0:
-        sett =f"0{nr}d"
-        fmt =f"{linenr:0{nr}d}"
+        sett = f"0{nr}d"
+        fmt = f"line {linenr:0{nr}d}"
     return fmt
 
 

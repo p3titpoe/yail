@@ -3,7 +3,7 @@ import inspect
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass,field
-from .logic import LoggerLevel
+from yail.logic import LoggerLevel, Registry
 
 def iso_date(dummy:str)->str:
     # return datetime.isoformat("YYYY-MM-DD HH:MM:SS")
@@ -123,7 +123,7 @@ def data2str(data:any)->str:
         dict:datadict,
         'none':datanone
     }
-    if data[0] == None:
+    if data[0] == None or data is not isinstance(data,l):
         return ""
     else:
         typ = type(data[0])
@@ -134,14 +134,14 @@ def data2str(data:any)->str:
         return func_to_call(data)
 
 def loglevel2str(data:LoggerLevel)->str:
-    out = str(data.name)
+    out = data.name
     return out
 def loglevel2val(data:LoggerLevel)->str:
     out = str(data.value)
     return out
     #
 def lineno(data:inspect.FrameInfo)->str:
-    return str(data.f_lineno)
+    return data.f_lineno
 
 class FormTags(Enum):
     ISODATE = iso_date
@@ -182,6 +182,186 @@ def get_tags(form:str) -> list:
     return out
 
 ccc=">12"
+@dataclass
+class FormatterTag:
+    """
+        Holds the format & stringed data and is
+        responsible for proper output of the f"" string
+
+    .. note::
+        If replace is longer than column it is truncated
+
+    Accpetable values for align:
+        - l = left
+        - c = centered
+        - r = right
+    """
+
+    name:str
+    replace: str = ""
+    align: str ="c"
+    _column_width: int = 0
+    _fixed: bool = True
+    _fmt: str = ""
+    _is_to_long:bool = False
+    _filler_len:int = 0
+    _filler = " "
+    _align_dict = {'l': '<',
+                   'c': '^',
+                   'r': '>'
+                   }
+    cnt:int = 0
+    def __post_init__(self):
+        self._check_if_to_long()
+
+
+    def _check_if_to_long(self)->None:
+        """
+            Sets the appropriate flag for compiling output
+        """
+        repl_len = len(self.replace)
+        if  repl_len > self.column_width:
+            self._is_to_long = True
+        else:
+            self._filler_len = self.column_width - repl_len
+            self._is_to_long = False
+        self._fixed = False if self.column_width == 0 else True
+        # print(self._is_to_long," .... ", repl_len,self.column_width)
+
+
+    @property
+    def fmt(self)->str:
+        return self._fmt
+
+    @property
+    def column_width(self)->int:
+        return self._column_width
+
+    def set_column_width(self,width:int)->None:
+        self._column_width = width
+        self._check_if_to_long()
+
+    def set_fmt(self,fmt:str)->None:
+        self._fmt = fmt
+
+    def compile(self)->str:
+        fmt: str =""
+        if self._fixed:
+            # print(f"Compile :: {self._fixed}")
+            if self._is_to_long:
+                # print(f"Compile :: is too long {self._is_to_long}")
+
+                fmt = f"{self.replace:.{self.column_width}}"
+                # fmt = f"{self.replace:.4}"
+            if self.replace != "" and not self._is_to_long:
+                # print(f"Compile :: Not too long")
+                if self.name == "loggername":
+                    print(len(self.replace))
+                align_str = self._align_dict[self.align]
+                # padding = self._filler+align_str+self._filler_len
+                fmt = f"{self.replace:{self._filler}{align_str}{self._filler_len}}"
+                if self.name == "loggername":
+                    print(len(fmt),len(self.replace),type(self.replace))
+                    fmt = f"{self.replace:{self._filler}{align_str}{self._filler_len}}"
+                    print("WW  ",len(fmt),len(self.replace),type(self.replace))
+
+        else:
+            # print(f"Compile :: Else close")
+
+            fmt = f"{self.replace}"
+
+        return fmt
+
+
+@dataclass
+class FormatterConfig:
+    """
+        Holds the formats for loglevel
+    """
+    module_separator: str = "."
+    columns_separator: str = "::"
+    default_active:str = ""
+    default_short:str = "date today|20:logger name|:20"
+    default_long:str = "date today|20:logger name|:20"
+
+    log_debug:str = ""
+    log_info:str = ""
+    log_warning:str = ""
+    log_error:str = ""
+    log_critical:str = ""
+    log_fatal:str = ""
+
+    _package_members: str = field(init=False, default_factory=str)
+    def __post_init__(self):
+        self.default_active = []
+        self.default_short = ['date today','loggername','loglevel','module','function','msg']
+        self.default_long = ['isodate','loggername','loglevel','module','class','function','msg']
+
+        self.log_debug = ['date isodate','loggername','loglevel','module','class','function','lineno','msg','data']
+        self.log_info = self.default_long
+        self.log_warning = self.default_long
+        self.log_error = self.default_long
+        self.log_critical = self.default_long
+        self.log_fatal = self.default_long
+        self._package_members = ['package','module','class','function']
+
+    @property
+    def package_members(self)->list:
+        return self._package_members
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class FormatterConfig:
+#     """
+#         Holds the formats for loglevel
+#     """
+#     module_separator: str = "."
+#     columns_separator: str = "::"
+#     default_active:list = field(init=False,default_factory=list)
+#     default_short:list = field(init=False,default_factory=list)
+#     default_long:list = field(init=False,default_factory=list)
+#
+#     log_debug:list = field(init=False,default_factory=list)
+#     log_info:list = field(init=False,default_factory=list)
+#     log_warning:list = field(init=False,default_factory=list)
+#     log_error:list = field(init=False,default_factory=list)
+#     log_critical:list = field(init=False,default_factory=list)
+#     log_fatal:list = field(init=False,default_factory=list)
+#
+#     _package_members: list = field(init=False, default_factory=list)
+#     def __post_init__(self):
+#         self.default_active = []
+#         self.default_short = ['date today','loggername','loglevel','module','function','msg']
+#         self.default_long = ['isodate','loggername','loglevel','module','class','function','msg']
+#
+#         self.log_debug = ['date isodate','loggername','loglevel','module','class','function','lineno','msg','data']
+#         self.log_info = self.default_long
+#         self.log_warning = self.default_long
+#         self.log_error = self.default_long
+#         self.log_critical = self.default_long
+#         self.log_fatal = self.default_long
+#         self._package_members = ['package','module','class','function']
+#
+#     @property
+#     def package_members(self)->list:
+#         return self._package_members
+
+
 @dataclass
 class Formatter:
     """
@@ -238,9 +418,10 @@ class Formatter:
 
     """
     logger_name:str
+    _conf: FormatterConfig = field(default_factory=FormatterConfig)
     _active_format:str = 'long'
     _format_short:str =(f"<<today>>::<<loggername>>::<<loglevel value>>::<<lineno>> - <<function>>::<<msg>>::<<data>>")
-    _format_long:str =(f"<<isodate>>::<<loggername>>:: <<lineno>> ::<<loglevel>>:<<module>>.<<class>>.<<function>>::<<msg>>::<<data>>")
+    _format_long:str =(f"<<isodate>>::<<loggername>>:: <<lineno>> ::<<loglevel>>:<<module>>.<<class>>.<<function>>::<<msg>>")
     _format_datadict=(f"DATA::<<function>>::<<key>>::<<val>>\n")
     _tags:dict = field(default_factory=dict)
     _short:bool = False
@@ -312,13 +493,57 @@ class Formatter:
             self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
 
+    def compile_new(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
+        # form = self.get_tags()
+        conf = self._conf
+        form = conf.default_long
+        form_tags = self._check_tags(form)
+        out=""
+        for tag in form:
+            if tag != 'loggername':
+                f = tag.split(" ")[0] if len(tag.split(" ")) == 2 else tag
+                func = FormTags.by_name(form_tags[tag])
+                form_data = frame
+                if f == "msg":
+                    form_data = msg
+                elif "loglevel" in f:
+                    form_data = loglevel
+                else:
+                    form_data = frame
+                res = func(form_data)
+                # print(res)
+                composite = FormatterTag(tag,res)
+
+            else:
+                composite = FormatterTag(tag,self.logger_name)
+
+            # print(composite)
+            if tag not in self._conf.package_members:
+                composite.set_column_width(15)
+
+            # print(composite)
+            sep = self._conf.columns_separator
+            if tag in self._conf.package_members:
+                sep = self._conf.module_separator
+            if tag =='loglevel':
+                print(composite)
+            tmp = f"{composite.compile()}{sep}"
+            out += tmp
+
+        return out
+
+
+
+
+
+
     def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
         out_msg = ""
-        composite=self.format
+        # composite=self.format
         form = self.get_tags()
-        if not self._show_data:
-            form.remove('data')
-            composite = composite[:-8]
+        # if not self._show_data:
+        #     form.remove('data')
+        #     composite = composite[:-8]
 
         form_tags = self._check_tags(form)
 
@@ -334,7 +559,7 @@ class Formatter:
                 # sp = composite.split("::")
                 cnt = []
                 limit = -2 if not self._short else -1
-                cnt.extend([" " for x in range(len(composite)-2)])
+                # cnt.extend([" " for x in range(len(composite)-2)])
                 spacer = "".join(cnt[:-6])
                 fmt = replace_tag_in_format(self._format_datadict,'function',FormTags.FUNCTION(frame))
                 # print("FFFFF",FormTags.FUNCTION(frame))
@@ -349,7 +574,10 @@ class Formatter:
             # if f != data:
             res = func(form_data)
             # print(res)
-            composite = replace_tag_in_format(composite,tag,res)
+            composite = FormatterTag(tag,res)
+
+            # print(res)
+            # composite = replace_tag_in_format(composite,tag,res)
 
 
         return  composite

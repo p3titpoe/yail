@@ -1,44 +1,61 @@
+import inspect
+
+import testing.nested.nested
 import yail as logger
+import yail.formatter.formatter
+from yail.logic import LoggerLevel,LoggerMessage
 from testing.models import testclass,testclassb
+from testing.nested.innernested.blested import  nestedclass
 
 hh =logger.get_logger("OOOOO")
 
-bb = logger.get_logger('Test')
-tst = testclass()
-tst2 = testclassb()
-logger.warning("Logger will stop output to console")
-tt2 = logger.logger_by_name('test3')
-# print("TEST2 ", tt2.cache.booked)
-tst2.blas(3,4)
-tt2.info("well Then..")
-# print("TEST2 ", tt2.cache.booked)
-def fr():
-    logger.info("Who is this")
-fr()
-logger.sip('test3')
-# logger.info("Logger stopped processind")
-logger.info("Rootlogger is still working")
-hh.info("Other logger")
-# # for k,x in logger.LOGGER.rootcache.registry.items():
-# #     if x is not None:
-# #         print("Main Logger",k,"  ",x.name)
-tst2.blas(5, 5)
-# print("TEST2 ", tt2.cache.booked)
-# print("TEST2 ", tt2.mute_all,tt2.console)
+logger.warning("BLAAA")
+
+hh.debug("trztrztrztrzt")
+
+# fmt = yail.formatter.Formatter("Test")
+oo = testclassb()
+class testclassc:
+    def __init__(self, bb="WWWW"):
+        self.ar = bb
+        # cc.debug("Init Testclassc")
+
+    def harrr(self):
+        msg = ("This is a veryyyy loooong sentence,just to check how the it displays in the colnsole,considering allmeans."
+               ",just to check how the it displays in the colnsole,considering allmeans.")
+        hh.debug(msg)
+
+    def haha(self):
+        # fmt.conf.default_long = "loglevel name:msg"
+        hh.info("vvvvvvv")
+        logger.debug("mnbmnb",{2:45,4:"tztut",0:"loki"})
+
+
+nn = testclassc()
+nn.harrr()
+nn.haha()
+# def testfunc()->any:
+#     return fmt.compile_new("TEST",inspect.currentframe(),LoggerLevel.DEBUG)
 #
-cc = logger.logger_by_name("test3")
-cc.warning("Switched to another module")
-# logger.muteoff()
-cc.critical("This is  printing")
-hh.info("I'm here!!")
+# # for x in range (0,1):
+# vv = testing.nested.nested.nestedclass()
+# ll = testing.nested.innernested.blested.nestedclass()
+# mm = testfunc()
+# ddd = nestedclass()
+# print(mm)
+# print(nn.harrr())
+# print(nn.haha())
+oo.blas(8,8)
+# print(yail.formatter.tstfunc())
+# print(vv.nestedBlas(3,3,3))
+# # print(nestedclass.nestedBlas(2,2,2))
+# # print(f"{mm.compile()},mm")|____
+
+
 
 #
-# class testclassc:
-#     def __init__(self, bb="WWWW"):
-#         self.ar = bb
-#         cc.debug("Init Testclassc")
-#
-#
+#LOGGGER TESTING
+
 # logger.debug("restarting processing")
 # logger.muteoff()
 # ff = testclassc()

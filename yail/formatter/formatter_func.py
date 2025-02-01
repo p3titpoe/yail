@@ -77,13 +77,14 @@ def data_func(*args):
             txt += f'{str(str_data):>10}'
             return txt
 
-        def datadict(data: list) -> str:
+        def datadict(data: dict) -> str:
             # txt = f"\n"
             max_field_len = 10
             full_fields = False
             first_line_same = False
             first = True
-            txt = f"" if first_line_same else f"\n"
+            txt = f"{'':<54} DATA: \n"
+            # txt = f"" if first_line_same else f"\n"
             for k, v in data.items():
                 line: str = ""
                 val = str(v)
@@ -96,10 +97,14 @@ def data_func(*args):
                 val = val[:max_field_len]
                 if not full_fields and len(val) >= max_field_len:
                     val += "..."
-                itr = [("key", k), ("val", val)]
+                # itr = [("key", k), ("val", val)]
+                line = f"{'':<54}:: {k} : {v} \n"
+
                 # for x in itr:
                 #     line = replace_tag_in_format(line, x[0], x[1])
+                #     line = replace_tag_in_format(line, x[0], x[1])
                 txt += line
+                # print("FFFFFFFFFFF ::", txt[:-1])
             return txt[:-1]
 
         def datanone(data: any) -> str:
@@ -125,7 +130,6 @@ def data_func(*args):
                 func_to_call = map[typ]
             else:
                 func_to_call = map['none']
-            print("FFFFFFFFFFF ::", func_to_call)
 
             return func_to_call(args[0])
 

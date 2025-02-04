@@ -361,13 +361,50 @@ class LoggerCacheline:
 
 @dataclass
 class MasterLoggerCache(LoggerCache):
+    """
+        Extends LoggerCache with manageing functions for several loggercach.
+
+        .. warning::
+            Overides the parent register function
+
+        PARAMETERS:
+            - None
+
+        RETURNS:
+            - None
+
+    """
     _logger_by_names: dict =field(init=False,default_factory=dict)
 
     @property
     def logger_by_name(self)->list:
+        """
+            Returns a list of loggernames.
+
+            PARAMETERS:
+                - None
+
+            RETURNS:
+                - list[str] : list of logger
+
+        """
+
         return [x for x in self._logger_by_names.keys()]
 
     def register(self, logger):
+        """
+            Register a cache item.
+
+            .. warning::
+                Overides the parent register function
+
+            PARAMETERS:
+                - logger:Loggercache
+
+            RETURNS:
+                - None
+
+        """
         reg_id = None
         cacheline = LoggerCacheline(logger)
         if len(self.booked) + 1 <= self.max_len:
@@ -386,5 +423,15 @@ class MasterLoggerCache(LoggerCache):
         return self.registry[reg_id]
 
     def cache_entry_by_name(self,name:str)->LoggerCacheline:
+        """
+            Returns a cahe entry by name.
+
+            PARAMETERS:
+                - name:str
+
+            RETURNS:
+                - LoggerCacheline
+
+        """
         if name in self._logger_by_names:
             return self.cache_entry(self._logger_by_names[name])

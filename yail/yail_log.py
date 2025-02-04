@@ -225,8 +225,7 @@ class LoggerManager:
             - unmute data       : stop data processing
             - mute data         : resume data processing
 
-        .. warning::
-            Mechanism might
+
 
     """
     _root_cache:MasterLoggerCache
@@ -386,5 +385,10 @@ class LoggerManager:
         return new_logger
 
     def shutdown(self)->None:
+        """
+            .. warning::
+                Needs to be implemented
+
+        """
         self._root_logger.info("YAIL is shuting down!")
         pass

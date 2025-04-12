@@ -15,7 +15,7 @@ def infoprint():
 
 hh =logger.get_logger("OOOOO")
 
-logger.master_loglevel(LoggerLevel.CRITICAL)
+# logger.master_loglevel(LoggerLevel.CRITICAL)
 # infoprint()
 
 logger.warning("BLAAA")

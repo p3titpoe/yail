@@ -1,9 +1,6 @@
 import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
-
-from Cython.Runtime.refnanny import loglevel
-
 from .logic import *
 from .formatter.formatter import Formatter
 
@@ -231,13 +228,11 @@ class LoggerManager:
             - unmute data       : stop data processing
             - mute data         : resume data processing
 
-
-
     """
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
     _application_name:str = "yail"
-    _master_loglevel:LoggerLevel = LoggerLevel.DEBUG
+    _master_loglevel:LoggerLevel = LoggerLevel.INFO
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False

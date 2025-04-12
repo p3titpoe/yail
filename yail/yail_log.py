@@ -1,6 +1,9 @@
 import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
+
+from Cython.Runtime.refnanny import loglevel
+
 from .logic import *
 from .formatter.formatter import Formatter
 
@@ -234,7 +237,7 @@ class LoggerManager:
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
     _application_name:str = "yail"
-    _master_loglevel:LoggerLevel = LoggerLevel.INFO
+    _master_loglevel:LoggerLevel = LoggerLevel.DEBUG
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
@@ -258,8 +261,7 @@ class LoggerManager:
                            "mute data",
                            ]
         for log in loggerlist:
-            loggercacheline = self.get_logger_by_name(log)
-            logger:BaseLogger = loggercacheline.logger
+            logger:BaseLogger = self.get_logger_by_name(log)
             do,what = action.split(" ")
             if action in actions_list:
                 logbool = getattr(logger,what)
@@ -358,18 +360,20 @@ class LoggerManager:
         else:
             self._logger_actions([name],"unmute mute_all")
 
-    def set_loglevel(self,loglevelname:str,loggername:str=None)->None:
-        loglevel = LoggerLevel.by_name(loglevelname.upper())
-        if isinstance(loglevel,LoggerLevel):
-            if loggername is None:
-                self.__master_loglevel = loglevel
-                for x in self.rootcache.booked:
-                    self.rootcache.registry[x].logger.set_loglevel(loglevel)
-            else:
-                logger = self.rootcache.cache_entry_by_name(loggername)
-                logger.log_level = loglevel
+    def set_loglevel(self, loglvl:str|LoggerLevel, loggername:str=None)->None:
+        if isinstance(loglvl,str):
+            loglevel = LoggerLevel.by_name(loglvl.upper())
         else:
-            print(f"SDCDSCDSCSDCSDCSDCDC::: ",loglevelname)
+            loglevel = loglvl
+        # if isinstance(loglevel,LoggerLevel):
+        if loggername is None:
+            self._master_loglevel = loglevel
+            for x in self.rootcache.booked:
+                self.rootcache.registry[x].logger.set_loglevel(loglevel)
+        else:
+            logger = self.rootcache.cache_entry_by_name(loggername)
+            logger.log_level = loglevel
+
 
     @property
     def rootcache(self)->MasterLoggerCache:
@@ -380,11 +384,13 @@ class LoggerManager:
         return self._root_logger
 
 
-    def get_logger_by_name(self,name:str)->LoggerCacheline:
+    def get_logger_by_name(self,name:str)->BaseLogger:
         """
             Returns logger by name
         """
-        return self.rootcache.cache_entry_by_name(name)
+        cl:LoggerCacheline = self.rootcache.cache_entry_by_name(name)
+        lg:BaseLogger = cl.logger
+        return lg
 
 
     def make_new_logger(self,name:str)->BaseLogger:

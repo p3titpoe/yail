@@ -7,7 +7,7 @@ def get_logger(name:str)->BaseLogger:
     return LOGGER.make_new_logger(name)
 
 def logger_by_name(name:str)->BaseLogger:
-    return LOGGER.get_logger_by_name(name).logger
+    return LOGGER.get_logger_by_name(name)
 
 def muteall()->None:
     LOGGER.mute_all_or_sip()

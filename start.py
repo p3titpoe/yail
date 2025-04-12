@@ -17,7 +17,7 @@ def infoprint():
 hh =logger.get_logger("OOOOO")
 
 logger.master_loglevel('info')
-infoprint()
+# infoprint()
 
 logger.warning("BLAAA")
 

@@ -13,10 +13,10 @@ def infoprint():
     out = [f"{x[0]:<15} :: {x[1].name:<16}\n" for x in log_]
     print("".join(out))
 
-
 hh =logger.get_logger("OOOOO")
 
-logger.master_loglevel('info')
+# logger.master_loglevel('info')
+# logger.master_loglevel(LoggerLevel.CRITICAL)
 # infoprint()
 
 logger.warning("BLAAA")
@@ -48,7 +48,7 @@ oo.blas()
 # logger.master_loglevel('error')
 logger.master_loglevel('error')
 bb.blas()
-infoprint()
+# infoprint()
 nn = testclassc(bb="WWWWWW")
 nn.harrr()
 nn.haha()

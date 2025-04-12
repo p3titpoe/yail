@@ -228,8 +228,6 @@ class LoggerManager:
             - unmute data       : stop data processing
             - mute data         : resume data processing
 
-
-
     """
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger

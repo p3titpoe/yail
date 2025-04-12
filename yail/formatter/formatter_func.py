@@ -83,7 +83,7 @@ def data_func(*args):
             full_fields = False
             first_line_same = False
             first = True
-            txt = f"{'':<54} DATA: \n"
+            txt = f"\n{'':<49} DATA::\n"
             # txt = f"" if first_line_same else f"\n"
             for k, v in data.items():
                 line: str = ""

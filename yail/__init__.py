@@ -32,6 +32,10 @@ def mute(name:str = None)->None:
     else:
         LOGGER.mute_logger(name)
 
+def loglevel(loglvlname:str,loggername:None)->None:
+    LOGGER.set_loglevel(loglvlname,loggername)
+def master_loglevel(loglvlname:str)->None:
+    LOGGER.set_loglevel(loglvlname)
 def stop_processing(name:str | None)->None:
     if name is None:
         warning("Logger will stop all processing!!!")
@@ -47,8 +51,8 @@ def resume_processing(name:str|None)->None:
         info(f"Resuming processing of logger {name}")
 
 ##############################################################
-# convennience functions for logging to root loggger
-#
+# convennience functions for accessing the rootcache and
+# - logger
 ##############################################################
 
 
@@ -89,7 +93,6 @@ def error(info: str, loggger_msg_data: any = None) -> None:
     """
     frame = currentframe().f_back
     LOGGER._root_logger.error(info,loggger_msg_data,external_frame=frame)
-
 
 def critical(info: str, loggger_msg_data: any = None) -> None:
     """

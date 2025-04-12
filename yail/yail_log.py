@@ -33,7 +33,7 @@ class BaseLogger:
 
     def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
         """
-            Base function for loggers
+            Base logging function for loggers
 
             PARAMETERS:
                 - loglevel: LoggerLevel
@@ -46,18 +46,19 @@ class BaseLogger:
 
         if external_frame is not None:
             act_fram = external_frame
+
         msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
         # msg = f'{module_name}.{qual_name}'
         # print(msg)
         msg_obj = LoggerMessage(self.loggername, loglevel, msg)
-        #
         self.__base_output_function(msg_obj)
 
-    def __base_output_function(self,data)->None:
+    def __base_output_function(self,data:LoggerMessage)->None:
         if not self.mute_all:
             self.cache.register(data)
-            if not self.console:
-                print(data.msg)
+            if data.log_level.value >= self.log_level.value:
+                if not self.console:
+                    print(data.msg)
 
 
     @property
@@ -87,6 +88,8 @@ class BaseLogger:
     def formatter(self)->Formatter:
         return self._formatter
 
+    def set_loglevel(self,loglevel:LoggerLevel)->None:
+        self.log_level = loglevel
 
     def toggle_solo(self)->bool:
         "Switch Solo state"
@@ -230,7 +233,8 @@ class LoggerManager:
     """
     _root_cache:MasterLoggerCache
     _root_logger: BaseLogger
-    _application_name:str = "yail5"
+    _application_name:str = "yail"
+    _master_loglevel:LoggerLevel = LoggerLevel.INFO
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
@@ -244,13 +248,14 @@ class LoggerManager:
         # fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::{self._application_name} System ::<<msg>>"
         fmt= f"<<today>>::<<loggername>>::<<loglevel>>::{self._application_name}.<<class>>.<<function>>::<<msg>>::<<data>>"
         self._root_logger.formatter.replace_format('long',fmt)
+
     def _logger_actions(self,loggerlist:list,action:str)->bool:
         actions_list:list=["mute mute_all",
                            "unmute mute_all",
                            "mute console",
                            "unmute console",
                            "unmute data",
-                           "mute data"
+                           "mute data",
                            ]
         for log in loggerlist:
             loggercacheline = self.get_logger_by_name(log)
@@ -266,7 +271,6 @@ class LoggerManager:
                     if logbool:
                         logfunc = getattr(logger,f"toggle_{what}")
                         logfunc()
-            pass
 
     def mute_all_or_sip(self,sip:str = None)->None:
         """
@@ -354,7 +358,18 @@ class LoggerManager:
         else:
             self._logger_actions([name],"unmute mute_all")
 
-
+    def set_loglevel(self,loglevelname:str,loggername:str=None)->None:
+        loglevel = LoggerLevel.by_name(loglevelname.upper())
+        if isinstance(loglevel,LoggerLevel):
+            if loggername is None:
+                self.__master_loglevel = loglevel
+                for x in self.rootcache.booked:
+                    self.rootcache.registry[x].logger.set_loglevel(loglevel)
+            else:
+                logger = self.rootcache.cache_entry_by_name(loggername)
+                logger.log_level = loglevel
+        else:
+            print(f"SDCDSCDSCSDCSDCSDCDC::: ",loglevelname)
 
     @property
     def rootcache(self)->MasterLoggerCache:
@@ -379,7 +394,7 @@ class LoggerManager:
             The new logger inherits the Threshhold level from the __root__ logger
 
         """
-        new_logger = BaseLogger(name,self._root_logger,self._root_logger.log_level)
+        new_logger = BaseLogger(name,self._root_logger,self._master_loglevel)
         new_logger.cache.parent_cache = self._root_cache
         self._root_cache.register(new_logger)
         return new_logger

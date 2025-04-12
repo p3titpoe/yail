@@ -12,6 +12,11 @@ class LoggerLevel(Enum):
     ERROR = 40
     CRITICAL = 50
 
+    @classmethod
+    def by_name(cls, name: str):
+        att = getattr(cls, name)
+        return att
+
 
 @dataclass
 class LoggerMessage:
@@ -122,18 +127,18 @@ class BaseData:
 @dataclass(repr=False)
 class Registry:
     """
-        Creates a dictionnary with register from 0 to  given max_len and
+        Creates a dictionary with register from 0 to  given max_len and
         manages the data inside these registers.
         \n
         .. tip::
             LOGICAL COMPONENTS:
-                registry :dict(read-only)
+                _registry :dict(rw)
                     Represents the initial registry where data is stored
 
-                booked: list(read-only)
+                _booked: list(read-only)
                     A list holding registry id's in which data is stored (which are booked)
 
-                free: list(read-only)
+                _free: list(read-only)
                     A list containing empty registry id's
 
         PARAMETERS:
@@ -335,11 +340,12 @@ class LoggerCache(Registry):
         self.max_len = new_size
         return out
 
-    @dataclass
-    class LoggerLogParameters:
-        loglevel: LoggerLevel
-        qual_name: str = None
-        function_name:str = None
+@dataclass
+class LoggerLogParameters:
+    loglevel: LoggerLevel
+    qual_name: str = None
+    function_name:str = None
+
 @dataclass
 class LoggerCacheline:
     """
@@ -377,7 +383,7 @@ class MasterLoggerCache(LoggerCache):
     _logger_by_names: dict =field(init=False,default_factory=dict)
 
     @property
-    def logger_by_name(self)->list:
+    def logger_by_name(self)->list[str]:
         """
             Returns a list of loggernames.
 
@@ -419,12 +425,25 @@ class MasterLoggerCache(LoggerCache):
         self._logger_by_names = {v.name:k for k,v in self.registry.items() if v is not None}
 
 
-    def cache_entry(self, reg_id)->LoggerCacheline:
+    def cache_entry(self, reg_id:int)->LoggerCacheline:
+        """
+            Returns a cache entry by id.
+
+            .. warning::
+                Overrides the parent register function
+
+            PARAMETERS:
+                - reg_id:int
+
+            RETURNS:
+                - LoggerCacheline
+
+        """
         return self.registry[reg_id]
 
     def cache_entry_by_name(self,name:str)->LoggerCacheline:
         """
-            Returns a cahe entry by name.
+            Returns a cache entry by name.
 
             PARAMETERS:
                 - name:str

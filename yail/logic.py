@@ -21,7 +21,7 @@ class LoggerLevel(Enum):
 @dataclass
 class LoggerMessage:
     """
-        Dataclass representing a
+        Dataclass representing a LoggerMessage
     """
     sender: str
     log_level: LoggerLevel
@@ -168,6 +168,7 @@ class Registry:
                 nones += 1
         text += f'and {nones} empty'
         return text
+
     def __post_init__(self) -> None:
         # Create the Registry
         self._registry = {nr: None for nr in range(0, self.max_len)}
@@ -182,7 +183,7 @@ class Registry:
                 - None
 
             RETURNS:
-                - None
+                - bool
         """
         out = False
         new_cache = {i: None for i in range(0, self.max_len)}
@@ -210,7 +211,7 @@ class Registry:
     def hook_on_makelists(self)->any:
         """
         .. attention::
-                Should be defined by childs
+                Should be defined by kids
 
         """
 
@@ -237,7 +238,7 @@ class Registry:
             Register a cache item.
 
             .. warning::
-                Overides the parent register function
+                Overrides the parent register function
 
             PARAMETERS:
                 - None
@@ -273,7 +274,7 @@ class LoggerCache(Registry):
             Register a cache item.
 
             .. warning::
-                Overides the parent register function
+                Overrides the parent register function
 
             PARAMETERS:
                 - None
@@ -291,7 +292,7 @@ class LoggerCache(Registry):
         return reg_id
     def cache_entry(self,reg_id:int)->LoggerMessage:
         """
-            Returns a caxhe  item
+            Returns a cache  item
 
             PARAMETERS:
                 - None
@@ -304,7 +305,12 @@ class LoggerCache(Registry):
     def flush(self,to_screen:bool = False)->list:
         """
             Collects & returns
-        :return:
+
+            PARAMETERS:
+                - to_screen(bool)
+
+            RETURNS:
+                - list
         """
         outlist = [v for k,v in self.registry.items()]
         self.reset_cache()
@@ -368,7 +374,7 @@ class LoggerCacheline:
 @dataclass
 class MasterLoggerCache(LoggerCache):
     """
-        Extends LoggerCache with manageing functions for several loggercach.
+        Extends LoggerCache with managing functions for several loggercach's.
 
         .. warning::
             Overides the parent register function
@@ -391,7 +397,7 @@ class MasterLoggerCache(LoggerCache):
                 - None
 
             RETURNS:
-                - list[str] : list of logger
+                - list[str]
 
         """
 
@@ -405,7 +411,7 @@ class MasterLoggerCache(LoggerCache):
                 Overides the parent register function
 
             PARAMETERS:
-                - logger:Loggercache
+                - logger(Loggercache)
 
             RETURNS:
                 - None
@@ -433,7 +439,7 @@ class MasterLoggerCache(LoggerCache):
                 Overrides the parent register function
 
             PARAMETERS:
-                - reg_id:int
+                - reg_id(int)
 
             RETURNS:
                 - LoggerCacheline
@@ -446,7 +452,7 @@ class MasterLoggerCache(LoggerCache):
             Returns a cache entry by name.
 
             PARAMETERS:
-                - name:str
+                - name(str)
 
             RETURNS:
                 - LoggerCacheline

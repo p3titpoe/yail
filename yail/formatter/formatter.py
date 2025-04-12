@@ -146,19 +146,18 @@ class FormatterConfig:
     _lib: dict = field(init=False,default_factory=dict)
     _package_members: list = field(init=False, default_factory=str)
     _short:bool = False
+
     def __post_init__(self):
         self._package_members = ['package','module','class','function']
 
         def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
-        def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
+        # def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
+        def_list.extend([f"log_{x.name}" for x in LoggerLevel if x.value >0])
         for x in def_list:
             if hasattr(base_templ,x):
                 self._tokenize_fmt(x,getattr(base_templ,x))
         self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
-        # if x == "default_short":
-            #     self._tokenize_fmt(x,self._init_short)
-            # else:
-            #     self._tokenize_fmt(x,self._init_long)
+
 
 
     def _tokenize_fmt(self,name:str, configline:str)->list[FormatterTagStruct]:
@@ -422,6 +421,19 @@ class Formatter:
 
 
     def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
+        """
+            Compiles the given data into a string
+
+            PARAMETERS:
+                - msg(str)
+                - frame(any|inspection.Frame)
+                - loglevel(LoggerLevel)
+                - data(any|None)
+
+            RETURNS:
+                - list[FormatterTagStruct]
+        """
+
         form = self.get_tags(loglevel)
         # print(form)
         conf = self._conf
@@ -433,6 +445,7 @@ class Formatter:
                     }
 
         out=""
+        print("FORM ::",loglevel)
         for i,tagstruct in enumerate(form):
             # print(form)
 
@@ -457,6 +470,16 @@ class Formatter:
 
 
 def make_tagconfs_from_confline(form:str)->list[FormatterTagStruct]:
+    """
+        Breaks the format line into columns and their settings for further processing
+
+        PARAMETERS:
+            - form(str)
+
+        RETURNS:
+            - list[FormatterTagStruct]
+
+    """
     options = []
     command = ""
     out =[]

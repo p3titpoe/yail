@@ -13,7 +13,7 @@ def infoprint():
     out = [f"{x[0]:<15} :: {x[1].name:<16}\n" for x in log_]
     print("".join(out))
 
-hh =logger.get_logger("OOOOO")
+# hh =logger.get_logger("OOOOO")
 
 # logger.master_loglevel(LoggerLevel.CRITICAL)
 # infoprint()
@@ -28,12 +28,12 @@ hh.debug("trztrztrztrzt")
 logger.master_loglevel('critical')
 # # infoprint()q
 hh.error("ERRtruzpoipökjklhh")
-hh.info("INFOOOOOOO")
+# hh.info("INFOOOOOOO")
 tst.log("blblblblblb")
 
 # logger.master_loglevel('critical')
 tst.log("33333blblblblblb")
-hh.info("INFO")
+# hh.info("INFO")
 # # fmt = yail.formatter.Formatter("Test")
 # oo = testclassb()
 # bb = testclass()

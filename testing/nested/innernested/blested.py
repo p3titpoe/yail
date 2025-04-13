@@ -4,7 +4,7 @@ import yail as logger
 from yail.logic import LoggerLevel
 # fmt = logger.formatter.Formatter("Test")
 
-log = logger.get_logger('test2')
+log = logger.get_logger('test3332')
 class nestedclass:
     def __init__(self,ar = 10):
         self.ar = ar

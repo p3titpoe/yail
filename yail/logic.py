@@ -358,9 +358,11 @@ class LoggerCacheline:
         The data stored by MasterLoggerCache
     """
     logger: object
+    public:bool
     name: str = ""
     log_level: LoggerLevel = LoggerLevel.DEBUG
     cache: LoggerCache = None
+
 
     def __post_init__(self):
         """
@@ -403,7 +405,7 @@ class MasterLoggerCache(LoggerCache):
 
         return [x for x in self._logger_by_names.keys()]
 
-    def register(self, logger):
+    def register(self, logger,public:bool):
         """
             Register a cache item.
 
@@ -418,7 +420,7 @@ class MasterLoggerCache(LoggerCache):
 
         """
         reg_id = None
-        cacheline = LoggerCacheline(logger)
+        cacheline = LoggerCacheline(logger,public)
         if len(self.booked) + 1 <= self.max_len:
             reg_id = self.free[0]
             self._registry[reg_id] = cacheline

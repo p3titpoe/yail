@@ -4,8 +4,8 @@ from yail.formatter.formatter import Formatter
 from yail.logic import LoggerLevel
 # fmt = logger.formatter.Formatter("Test")
 
-log = logger.get_logger('test2')
-log2 = logger.get_logger('test22')
+log = logger.get_logger('test2',logger.LoggerLevel.WARNING,public=True)
+log2 = logger.get_logger('test22',logger.LoggerLevel.ERROR,block_level=True)
 
 class testclass:
     def __init__(self,ar = 10):

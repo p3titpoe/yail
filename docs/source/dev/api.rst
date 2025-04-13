@@ -2,7 +2,7 @@ By modules
 ==========
 
 API
----------
+----
 
 .. automodule:: yail.__init__
    :members:

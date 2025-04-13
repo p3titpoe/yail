@@ -152,10 +152,11 @@ class FormatterConfig:
 
         def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
         # def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
-        def_list.extend([f"log_{x.name}" for x in LoggerLevel if x.value >0])
+        def_list.extend([f"log_{x.name.lower()}" for x in LoggerLevel if x.value >= 10])
         for x in def_list:
             if hasattr(base_templ,x):
                 self._tokenize_fmt(x,getattr(base_templ,x))
+
         self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
 
 
@@ -445,7 +446,6 @@ class Formatter:
                     }
 
         out=""
-        print("FORM ::",loglevel)
         for i,tagstruct in enumerate(form):
             # print(form)
 

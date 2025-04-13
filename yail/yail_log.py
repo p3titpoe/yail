@@ -15,19 +15,21 @@ class BaseLogger:
         Exposes log functions for the different levels
     """
     parent: any
-    log_level: LoggerLevel
+    _log_level: LoggerLevel
     _name:str
     _cache: LoggerCache
     _formatter: Formatter
+    _block_loglevel:bool = False
     _mute_console: bool = False
     _mute_all: bool = False
     _solo: bool = False
 
 
-    def __init__(self,name:str, parent:any, log_level):
-        self.log_level = log_level
+    def __init__(self,name:str, parent:any, log_level,block_loglevel:bool=False):
+        self._log_level = log_level
         self._name = name
         self.parent = parent
+        self._block_loglevel = block_loglevel
         self._cache = LoggerCache(30,self)
         self._formatter = Formatter(self._name)
 
@@ -60,6 +62,9 @@ class BaseLogger:
                 if not self.console:
                     print(data.msg)
 
+    @property
+    def log_level(self)->LoggerLevel:
+        return self._log_level
 
     @property
     def solo(self)->bool:
@@ -89,7 +94,18 @@ class BaseLogger:
         return self._formatter
 
     def set_loglevel(self,loglevel:LoggerLevel)->None:
-        self.log_level = loglevel
+        """
+        Sets the loglevel
+        If the loglevel is locked, drops the request
+
+        PARAMETER:
+            - loglevel(Loggerlevel)
+
+        RETURNS:
+            - NONE
+        """
+        if not self._block_loglevel:
+            self._log_level = loglevel
 
     def toggle_solo(self)->bool:
         "Switch Solo state"
@@ -126,6 +142,26 @@ class BaseLogger:
         "Switch between short and long format"
         self.formatter.toggle_short_format()
         self.warning("Short format is Off!")
+
+    def log(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with self.log_level
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = self.log_level
+        # frame = external_frame
+        # if frame is None:
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
+
+
 
     def debug(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
@@ -238,6 +274,7 @@ class LoggerManager:
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
     _muted_list: list = field(init=False,default_factory=list)
+
     def __init__(self):
         name = '|-RooT-|'
         parent = None
@@ -472,11 +509,14 @@ class LoggerManager:
                 Baselogger
         """
         cl:LoggerCacheline = self.rootcache.cache_entry_by_name(name)
-        lg:BaseLogger = cl.logger
-        return lg
+        if not cl.public:
+            raise PermissionError(f"{cl.name} is not Public!")
+        else:
+            lg:BaseLogger = cl.logger
+            return lg
 
 
-    def make_new_logger(self,name:str)->BaseLogger:
+    def make_new_logger(self,name:str, loglevel:LoggerLevel=None, public:bool=False, block_level:bool=False)->BaseLogger:
         """
             Returns a new logger with given name and stores it in the registry
 
@@ -484,13 +524,17 @@ class LoggerManager:
 
             PARAMETER:
                 name(str)
+                loglevel(LoggerLevel)
 
             RETURNS:
                 Baselogger
         """
-        new_logger = BaseLogger(name,self._root_logger,self._master_loglevel)
+        loglvl = self._master_loglevel
+        if isinstance(loglevel,LoggerLevel):
+            loglvl = loglevel
+        new_logger = BaseLogger(name,self._root_logger,loglvl,block_loglevel=block_level)
         new_logger.cache.parent_cache = self._root_cache
-        self._root_cache.register(new_logger)
+        self._root_cache.register(new_logger,public)
         return new_logger
 
     def shutdown(self)->None:

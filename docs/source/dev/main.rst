@@ -6,6 +6,5 @@ Dev Corner
    :glob:
    :maxdepth: 6
 
-   mistral
-   by_modules
    api
+   by_modules

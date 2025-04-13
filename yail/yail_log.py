@@ -15,25 +15,27 @@ class BaseLogger:
         Exposes log functions for the different levels
     """
     parent: any
-    log_level: LoggerLevel
+    _log_level: LoggerLevel
     _name:str
     _cache: LoggerCache
     _formatter: Formatter
+    _block_loglevel:bool = False
     _mute_console: bool = False
     _mute_all: bool = False
     _solo: bool = False
 
 
-    def __init__(self,name:str, parent:any, log_level):
-        self.log_level = log_level
+    def __init__(self,name:str, parent:any, log_level,block_loglevel:bool=False):
+        self._log_level = log_level
         self._name = name
         self.parent = parent
+        self._block_loglevel = block_loglevel
         self._cache = LoggerCache(30,self)
         self._formatter = Formatter(self._name)
 
     def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
         """
-            Base logging function for loggers
+            Backend for all logging functions, eg info(), debug ()
 
             PARAMETERS:
                 - loglevel: LoggerLevel
@@ -60,6 +62,9 @@ class BaseLogger:
                 if not self.console:
                     print(data.msg)
 
+    @property
+    def log_level(self)->LoggerLevel:
+        return self._log_level
 
     @property
     def solo(self)->bool:
@@ -89,7 +94,18 @@ class BaseLogger:
         return self._formatter
 
     def set_loglevel(self,loglevel:LoggerLevel)->None:
-        self.log_level = loglevel
+        """
+        Sets the loglevel
+        If the loglevel is locked, drops the request
+
+        PARAMETER:
+            - loglevel(Loggerlevel)
+
+        RETURNS:
+            - NONE
+        """
+        if not self._block_loglevel:
+            self._log_level = loglevel
 
     def toggle_solo(self)->bool:
         "Switch Solo state"
@@ -121,10 +137,31 @@ class BaseLogger:
         "Switch data log state"
         res = self.formatter.toggle_data()
         self.warning(f"Data Logging is {res}!")
+
     def toggle_short(self)->None:
         "Switch between short and long format"
         self.formatter.toggle_short_format()
         self.warning("Short format is Off!")
+
+    def log(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
+        """
+            Convenience function to call __base_log_functions with self.log_level
+
+            PARAMETER:
+                - info: str = mesg to log
+                - loggger_msg_data: any = Restricted to int, str, lists
+
+            RETURNS:
+                - None
+
+        """
+        loglevel = self.log_level
+        # frame = external_frame
+        # if frame is None:
+        frame = inspect.currentframe().f_back
+        self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
+
+
 
     def debug(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
@@ -237,17 +274,33 @@ class LoggerManager:
     _solo_list:list = field(init=False,default_factory=list)
     _mute_on:bool = False
     _muted_list: list = field(init=False,default_factory=list)
+
     def __init__(self):
-        name = 'root'
+        name = '|-RooT-|'
         parent = None
         log_level = LoggerLevel.DEBUG
-        self._root_logger = BaseLogger('__root__',self,log_level)
+        self._root_logger = BaseLogger(name,self,log_level)
         self._root_cache = MasterLoggerCache(200,self)
-        # fmt= f"<<isodate>>::<<loggername>>::<<loglevel>>::{self._application_name} System ::<<msg>>"
-        fmt= f"<<today>>::<<loggername>>::<<loglevel>>::{self._application_name}.<<class>>.<<function>>::<<msg>>::<<data>>"
-        self._root_logger.formatter.replace_format('long',fmt)
 
-    def _logger_actions(self,loggerlist:list,action:str)->bool:
+    def _logger_actions(self,loggerlist:list,action:str)->None:
+        """
+            Backend functions for most of the following functions.
+
+            Takes a list of logger names and performs the given action
+            viable actions are:
+
+            - "mute mute_all"
+            - "unmute mute_all"
+            - "mute console"
+            - "unmute console"
+            - "unmute data"
+            - "mute data"
+
+            PARAMETER:
+                loggerlist(list)
+                action(str)
+        """
+
         actions_list:list=["mute mute_all",
                            "unmute mute_all",
                            "mute console",
@@ -256,8 +309,7 @@ class LoggerManager:
                            "mute data",
                            ]
         for log in loggerlist:
-            loggercacheline = self.get_logger_by_name(log)
-            logger:BaseLogger = loggercacheline.logger
+            logger:BaseLogger = self.get_logger_by_name(log)
             do,what = action.split(" ")
             if action in actions_list:
                 logbool = getattr(logger,what)
@@ -273,11 +325,12 @@ class LoggerManager:
     def mute_all_or_sip(self,sip:str = None)->None:
         """
             Mutes all Loggers.
-            If a loggername is given in siü, it acts as SOLO IN PLACE.
+            If a loggername is given in sip, it acts as SOLO IN PLACE.
 
             Solo in Place overrides every solo,meainig it's destructive where as the normal soolo functio is additive.
 
-
+            PARAMETER:
+                name(str|None)
         """
         loggerlist = self.rootcache.logger_by_name
         self._mute_on = True
@@ -301,6 +354,12 @@ class LoggerManager:
 
             When first invoked, it sip's(solo in place) the loggers,
             then adds every solo'd logger to the solo bus
+
+            .. info::
+               Only affects the console output!
+
+            PARAMETER:
+                name(str)
         """
         if not self._solo_on:
             self.mute_all_or_sip()
@@ -313,6 +372,11 @@ class LoggerManager:
         """
             Offs the Solo Bus or takes a Logger out of the bus
 
+            .. info::
+               Only affects the console output!
+
+            PARAMETER:
+                name(str|None)
         """
         if name is None:
             self._solo_on = False
@@ -324,7 +388,15 @@ class LoggerManager:
             self._solo_list.remove(name)
 
     def mute_logger(self,logger:str)->None:
-        """ Mutes the logger, is additive"""
+        """ Mutes the logger, is additive
+
+            .. info::
+               Only affects the console output!
+
+            PARAMETER:
+                name(str)
+        """
+
         self._mute_on = True
         self._logger_actions(logger,"mute console")
         self._muted_list.append(logger)
@@ -332,6 +404,12 @@ class LoggerManager:
     def mute_off(self, name: str = None) -> None:
         """
             Offs the Mute Bus or takes a Logger out of the bus
+
+            .. info::
+               Only affects the console output!
+
+            PARAMETER:
+                name(str|None)
         """
         if name is None:
             self._mute_on = False
@@ -343,31 +421,73 @@ class LoggerManager:
             self._muted_list.remove(name)
 
     def stop_processing_all(self)->None:
+        """
+            Stops ALL logging
+
+            .. warning::
+               THIS STOPS ALL LOGGING!
+               Nothing will be written to the handlers
+
+        """
         loggerlist=[x for x in self.rootcache.logger_by_name ]
         self._logger_actions(loggerlist, "mute mute_all")
 
     def stop_processing(self,name:str)->None:
+        """
+            Stops logging for a given logger
+
+            .. warning::
+               THIS STOPS ALL LOGGING!
+               Nothing will be written to the handlers
+
+            PARAMETER:
+                name(str)
+        """
+
         self._logger_actions([name], "mute mute_all")
 
     def resume_processing(self,name:str = None)->None:
+        """
+            Resumes ALL or logger specific logging
+
+            .. warning::
+               THIS STOPS ALL LOGGING!
+               Nothinfg will be written to the handlers
+
+            PARAMETER:
+                name(str)
+        """
+
         if name is None:
             loggerlist = [x for x in self.rootcache.logger_by_name]
             self._logger_actions(loggerlist,"unmute mute_all")
         else:
             self._logger_actions([name],"unmute mute_all")
 
-    def set_loglevel(self,loglevelname:str,loggername:str=None)->None:
-        loglevel = LoggerLevel.by_name(loglevelname.upper())
-        if isinstance(loglevel,LoggerLevel):
-            if loggername is None:
-                self.__master_loglevel = loglevel
-                for x in self.rootcache.booked:
-                    self.rootcache.registry[x].logger.set_loglevel(loglevel)
-            else:
-                logger = self.rootcache.cache_entry_by_name(loggername)
-                logger.log_level = loglevel
+    def set_loglevel(self, loglvl:str|LoggerLevel, loggername:str=None)->None:
+        """
+            Sets the loglevel at a global or a per logger level
+
+            PARAMETER:
+                loglvl(str|Loggerlevel)
+                loggername(str|None)
+
+            RETURNS:
+                None
+        """
+        if isinstance(loglvl,str):
+            loglevel = LoggerLevel.by_name(loglvl.upper())
         else:
-            print(f"SDCDSCDSCSDCSDCSDCDC::: ",loglevelname)
+            loglevel = loglvl
+        # if isinstance(loglevel,LoggerLevel):
+        if loggername is None:
+            self._master_loglevel = loglevel
+            for x in self.rootcache.booked:
+                self.rootcache.registry[x].logger.set_loglevel(loglevel)
+        else:
+            logger = self.rootcache.cache_entry_by_name(loggername)
+            logger.log_level = loglevel
+
 
     @property
     def rootcache(self)->MasterLoggerCache:
@@ -378,23 +498,43 @@ class LoggerManager:
         return self._root_logger
 
 
-    def get_logger_by_name(self,name:str)->LoggerCacheline:
+    def get_logger_by_name(self,name:str)->BaseLogger:
         """
             Returns logger by name
+
+            PARAMETER:
+                name(str)
+
+            RETURNS:
+                Baselogger
         """
-        return self.rootcache.cache_entry_by_name(name)
+        cl:LoggerCacheline = self.rootcache.cache_entry_by_name(name)
+        if not cl.public:
+            raise PermissionError(f"{cl.name} is not Public!")
+        else:
+            lg:BaseLogger = cl.logger
+            return lg
 
 
-    def make_new_logger(self,name:str)->BaseLogger:
+    def make_new_logger(self,name:str, loglevel:LoggerLevel=None, public:bool=False, block_level:bool=False)->BaseLogger:
         """
-            Return a new logger with given name and stores it in the registry
+            Returns a new logger with given name and stores it in the registry
 
             The new logger inherits the Threshhold level from the __root__ logger
 
+            PARAMETER:
+                name(str)
+                loglevel(LoggerLevel)
+
+            RETURNS:
+                Baselogger
         """
-        new_logger = BaseLogger(name,self._root_logger,self._master_loglevel)
+        loglvl = self._master_loglevel
+        if isinstance(loglevel,LoggerLevel):
+            loglvl = loglevel
+        new_logger = BaseLogger(name,self._root_logger,loglvl,block_loglevel=block_level)
         new_logger.cache.parent_cache = self._root_cache
-        self._root_cache.register(new_logger)
+        self._root_cache.register(new_logger,public)
         return new_logger
 
     def shutdown(self)->None:

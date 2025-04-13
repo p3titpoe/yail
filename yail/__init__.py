@@ -3,11 +3,11 @@ from inspect import currentframe
 
 LOGGER:LoggerManager = LoggerManager()
 
-def get_logger(name:str)->BaseLogger:
-    return LOGGER.make_new_logger(name)
+def get_logger(name:str, loglevel:LoggerLevel=None, public:bool=False, block_level=False)->BaseLogger:
+    return LOGGER.make_new_logger(name,loglevel=loglevel,public=public,block_level=block_level)
 
 def logger_by_name(name:str)->BaseLogger:
-    return LOGGER.get_logger_by_name(name).logger
+    return LOGGER.get_logger_by_name(name)
 
 def muteall()->None:
     LOGGER.mute_all_or_sip()

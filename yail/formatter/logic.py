@@ -164,7 +164,7 @@ class BaseFormatter:
         if form is None:
             fmt =self._conf.default_active
         else:
-            fmt = self._conf.fmt_by_loglevel(form)
+            fmt = self._conf.column_by_name(form)
         return fmt
 
     def replace_format(self,which:str,fmt:str)->None:

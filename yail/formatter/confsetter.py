@@ -1,53 +1,8 @@
+from pydoc import importfile
 from dataclasses import dataclass,field
-from enum import Enum
-# from cols_func import package_func,msg_func,data_func,loglevel_func,logger_func,lineno_func
 from yail.formatter.cols_func import *
-from yail.formatter import base_template as base_templ
-from yail.formatter.columns import ColumnType,ColumnSetup
-
-class FormTags(Enum):
-    # DATE = date_func
-    PACKAGE = package_func
-    MSG = msg_func
-    DATA = data_func
-    LOGLEVEL = loglevel_func
-    LINENO = lineno_func
-    LOGGER = logger_func
-
-
-    @classmethod
-    def by_name(cls, name: str):
-        att = getattr(cls, name)
-        return att
-
-
-@dataclass
-class FormatterTagStruct:
-    """
-        Configuration class for FormatterTag
-    """
-    formtag:str = ""
-    column_width:str = 0
-    column_align:str ="l"
-    args:list = field(init=False,default_factory=list)
-
-    def __post_init__(self):
-        self.column_width = int(self.column_width)
-
-class FormTags(Enum):
-    DATE = date_func
-    PACKAGE = package_func
-    MSG = msg_func
-    DATA = data_func
-    LOGLEVEL = loglevel_func
-    LINENO = lineno_func
-    LOGGER = logger_func
-
-
-    @classmethod
-    def by_name(cls, name: str):
-        att = getattr(cls, name)
-        return att
+from yail.formatter import base_template as base_tmpl
+from yail.formatter.columns import ColumnType,ColumnSetup,BaseColumn
 
 
 def make_tagconfs_from_confline(form:str)->list[ColumnSetup]:
@@ -90,11 +45,14 @@ def make_tagconfs_from_confline(form:str)->list[ColumnSetup]:
 
 
 @dataclass
-class FormatterConfig:
+class Templater:
     """
-        Holds the formats for loglevel
+        Holds the configurations(ColumnSetup) from template for loglevels.
+        Generates *Column classes
     """
-    columns_separator: str = "::"
+    _name:str = None
+    _template_path:str = None
+    _columns_separator: str = "::"
     _default_cols_len:list = field(init=False, default_factory=list)
     _init_short:str = "date today|26:logger name|20:loglevel name|10"
     _init_long:str = (f"date iso:logger name|8 c:loglevel name|8:"
@@ -103,153 +61,104 @@ class FormatterConfig:
     _init_default_attr:str ="active short long"
     _init_log_attr:str ="debug info warning error critical fatal"
     _lib: dict = field(init=False,default_factory=dict)
-    _package_members: list = field(init=False, default_factory=str)
     _short:bool = False
 
     def __post_init__(self):
-        self._package_members = ['package','module','class','function']
+        if self._name is None:
+            exit("Templater has no name!")
+
+        base_templ = base_tmpl
+        if self._template_path is not None:
+            base_templ = importfile(self._template_path)
 
         def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
-        # def_list.extend([f"log_{x}" for x in self._init_log_attr.split(" ")])
         def_list.extend([f"log_{x.name.lower()}" for x in LoggerLevel if x.value >= 10])
+
         for x in def_list:
+            #Get the default Columsetup if there's none provided
+            config = getattr(base_tmpl,x)
             if hasattr(base_templ,x):
-                self._tokenize_fmt(x,getattr(base_templ,x))
+                config = getattr(base_templ,x)
+
+            self._tokenize_fmt(x,config)
 
         self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
 
-
-
-    def _tokenize_fmt(self,name:str, configline:str)->list[FormatterTagStruct]:
-
+    def _tokenize_fmt(self,name:str, configline:str)->None:
         tokens = make_tagconfs_from_confline(configline)
+        self._lib[name]: list[ColumnSetup] = tokens
 
-        self._lib[name]: list[FormatterTagStruct] = tokens
-        if name == "default_long":
-            cols = self._extract_colwidths(tokens)
-            if cols != self._default_cols_len:
-                self._default_cols_len = cols
+    def _create_colclass(self,conf:ColumnSetup)->BaseColumn:
+        colclass = ColumnType.by_name(conf.htype.upper())
+        return colclass(conf)
 
-    def _return_conf(self,name:str)->list[FormatterTagStruct]:
+    def _return_col_config(self,name:str)->list[ColumnSetup]:
+        tokens = [None]
         if name in self._lib:
             tokens = self._lib[name]
-            cols = self._extract_colwidths(tokens)
-            act_cols = cols
-            # print(act_cols)
+        return tokens
 
-            # if cols != self._default_cols_len:
-            #     act_cols = self._default_cols_len
-            for i,x in enumerate(tokens):
-                x.column_width = act_cols[i]
+    def _return_conf(self,name:str)->list[BaseColumn]:
+        tokens = self._return_col_config(name)
+        out = []
+        for conf in tokens:
+            out.append(self._create_colclass(conf))
+        return out
 
-            return tokens
-
-    def _extract_colwidths(self,tokens:list[FormatterTagStruct])->list:
-        tmp=[x.column_width for x in tokens]
+    def _extract_colwidths(self,tokens:list[ColumnSetup])->list:
+        tmp=[x.width for x in tokens]
         return tmp
 
     @property
-    def default_long(self)->list[FormatterTagStruct]:
+    def default_long(self)->list[BaseColumn]:
         return self._return_conf('default_long')
 
-    @default_long.setter
-    def default_long(self, value:str)->None:
-        self._tokenize_fmt('default_long',value)
-        if not self._short:
-            self._lib['default_active'] = self._lib['default_long']
-
     @property
-    def default_short(self)->list[FormatterTagStruct]:
+    def default_short(self)->list[BaseColumn]:
         return self._return_conf('default_short')
 
-    @default_short.setter
-    def default_short(self, value):
-        self._tokenize_fmt('default_short', value)
-        if not self._short:
-            self._lib['default_active'] = self._lib['default_long']
-
-
     @property
-    def default_active(self)->list[FormatterTagStruct]:
+    def default_active(self)->list[BaseColumn]:
         return self._return_conf('default_active')
 
-    @default_active.setter
-    def default_active(self, value):
-        self._tokenize_fmt('default_active', value)
     @property
-    def log_debug(self)->list[FormatterTagStruct]:
+    def log_debug(self)->list[BaseColumn]:
         return self._return_conf('log_debug')
 
-    @log_debug.setter
-    def log_debug(self, value):
-        self._tokenize_fmt('log_debug', value)
-
-
     @property
-    def log_info(self)->list[FormatterTagStruct]:
+    def log_info(self)->list[BaseColumn]:
         return self._return_conf('log_info')
 
-    @log_info.setter
-    def log_info(self, value):
-        self._tokenize_fmt('log_info', value)
-
     @property
-    def log_warning(self)->list[FormatterTagStruct]:
+    def log_warning(self)->list[BaseColumn]:
         return self._return_conf('log_warning')
 
-    @log_warning.setter
-    def log_warning(self, value):
-        self._tokenize_fmt('log_warning', value)
-
     @property
-    def log_error(self)->list[FormatterTagStruct]:
+    def log_error(self)->list[BaseColumn]:
         return self._return_conf('log_error')
 
-    @log_error.setter
-    def log_error(self, value):
-        self._tokenize_fmt('log_error', value)
     @property
-    def log_critical(self)->list[FormatterTagStruct]:
+    def log_critical(self)->list[BaseColumn]:
         return self._return_conf('log_critical')
 
-    @log_critical.setter
-    def log_critical(self, value):
-        self._tokenize_fmt('log_critical', value)
-
     @property
-    def log_fatal(self)->list[FormatterTagStruct]:
+    def log_fatal(self)->list[BaseColumn]:
         return self._return_conf('log_fatal')
 
-    @log_fatal.setter
-    def log_fatal(self, value):
-        self._tokenize_fmt('log_fatal', value)
-
-
-    @property
-    def package_members(self)->list:
-        return self._package_members
 
     def toggle_short_format(self)->str:
         """
-            Toggles sgort format on / off
+            Toggles short format on / off
         """
-        # sw = False
-        # if not self._short:
-        #     sw = True
         self._short = True if not self._short else False
         self.default_active = self.default_long if not self._short else self.default_short
 
-    def fmt_by_loglevel(self,loglevel:LoggerLevel):
+    def column_by_name(self, loglevel:LoggerLevel)->BaseColumn:
         fmt_name = f"log_{loglevel.name.lower()}"
-        fmt = self._return_conf(fmt_name)
+        fmt_class = ColumnType.by_name(loglevel.name)
+        fmt = self._return_col_config(fmt_name)
         # print(f"FMT:::   {fmt_name}")
         return fmt
-
-
-    def use_custom_template(self,path_to_file:str)->None:
-        path_to_file = "/mnt/data/Coding/yail/yail/formatter/base_template.py"
-
-        pass
 
 #
 # fc = FormatterConfig()

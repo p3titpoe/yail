@@ -185,7 +185,8 @@ class DataColumn(BaseColumn):
         super().__init__(sp=sp)
 
     def process(self,lm:LoggerMessage)->str:
-        return self.compile(lm.logger_name)
+        # return self.compile(lm.data)
+        return "OVERIDDWEN IN DATACOLUMN"
 
 @dataclass(init=False)
 class LinenoColumn(BaseColumn):

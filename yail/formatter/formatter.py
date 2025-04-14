@@ -215,7 +215,7 @@ class Formatter:
         if form is None:
             fmt =self._conf.default_active
         else:
-            fmt = self._conf.fmt_by_loglevel(form)
+            fmt = self._conf.column_by_name(form)
         print(fmt)
         return fmt
 

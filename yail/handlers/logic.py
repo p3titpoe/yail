@@ -13,8 +13,8 @@ class HandlerType(Enum):
 
 @dataclass
 class BaseHandler:
-    _htype:HandlerType
-    _formatter:Formatter
+    _htype:HandlerType = None
+    _formatter:Formatter = None
     _paths:dict = field(init=False,default_factory=dict)
     _muted_channels:list = field(init=False,default_factory=dict)
 

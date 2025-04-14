@@ -3,6 +3,7 @@ from datetime import datetime
 from dataclasses import dataclass,field
 from .logic import *
 from .formatter.formatter import Formatter
+from handlers.console import ConsoleHandler
 
 
 
@@ -18,7 +19,7 @@ class BaseLogger:
     _log_level: LoggerLevel
     _name:str
     _cache: LoggerCache
-    _formatter: Formatter
+    _handler: ConsoleHandler
     _block_loglevel:bool = False
     _mute_console: bool = False
     _mute_all: bool = False
@@ -31,7 +32,7 @@ class BaseLogger:
         self.parent = parent
         self._block_loglevel = block_loglevel
         self._cache = LoggerCache(30,self)
-        self._formatter = Formatter(self._name)
+        self._handler = ConsoleHandler()
 
     def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
         """
@@ -90,8 +91,8 @@ class BaseLogger:
         return self._name
 
     @property
-    def formatter(self)->Formatter:
-        return self._formatter
+    def handler(self)->Formatter:
+        return self._handler
 
     def set_loglevel(self,loglevel:LoggerLevel)->None:
         """

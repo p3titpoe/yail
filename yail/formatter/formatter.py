@@ -6,7 +6,7 @@ from dataclasses import dataclass,field
 from importlib import import_module
 from yail.logic import LoggerLevel, Registry
 import yail.formatter.base_template as base_templ
-from .formatter_func import *
+from .confsetter_func import *
 
 class FormTags(Enum):
     DATE = date_func
@@ -28,8 +28,6 @@ def get_tags_old(form:str) -> list:
     # re_blob = re.compile('<<([a-z]+ [a-z]+)>>')
     out =  re.findall(re_blob,form)
     return out
-
-
 
 
 @dataclass
@@ -116,7 +114,6 @@ class FormatterTag:
             fmt = f"{self.replace}"
 
         return fmt
-
 
 
 @dataclass
@@ -296,43 +293,6 @@ class Formatter:
         return out
 
 
-def make_tagconfs_from_confline(form:str)->list[FormatterTagStruct]:
-    """
-        Breaks the format line into columns and their settings for further processing
-
-        PARAMETERS:
-            - form(str)
-
-        RETURNS:
-            - list[FormatterTagStruct]
-
-    """
-    options = []
-    command = ""
-    out =[]
-    #Break up the token
-    configlines = form.split(":")
-    for line in configlines:
-        tagstruct = FormatterTagStruct()
-        #check for column width
-        sp = line.split("|")
-        command = sp[0]
-        if len(sp) == 2:
-            # command = sp[0]
-            col_options = sp[1].split()
-            tagstruct.column_width = int(col_options[0])
-            if len(col_options) == 2:
-                tagstruct.column_align = col_options[1]
-
-        command_test = command.split(" ")
-        if len(command_test) > 1:
-            command = command_test[0]
-            options = command_test[1:]
-
-        tagstruct.formtag = command
-        tagstruct.args = options
-        out.append(tagstruct)
-    return out
 
 def tstfunc():
     fmt = Formatter("DDD")

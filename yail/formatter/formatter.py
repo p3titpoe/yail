@@ -4,24 +4,11 @@ from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass,field
 from importlib import import_module
-from yail.logic import LoggerLevel, Registry
+from yail.logic import LoggerLevel, LoggerMessage
 import yail.formatter.base_template as base_templ
-from .confsetter_func import *
-
-class FormTags(Enum):
-    DATE = date_func
-    PACKAGE = package_func
-    MSG = msg_func
-    DATA = data_func
-    LOGLEVEL = loglevel_func
-    LINENO = lineno_func
-    LOGGER = logger_func
+from .confsetter import FormatterConfig,FormTags
 
 
-    @classmethod
-    def by_name(cls, name: str):
-        att = getattr(cls, name)
-        return att
 
 def get_tags_old(form:str) -> list:
     re_blob = re.compile('<<([a-z]+ ?[a-z]+)>>')
@@ -229,6 +216,7 @@ class Formatter:
             fmt =self._conf.default_active
         else:
             fmt = self._conf.fmt_by_loglevel(form)
+        print(fmt)
         return fmt
 
     def replace_format(self,which:str,fmt:str)->None:
@@ -245,7 +233,7 @@ class Formatter:
             # self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
 
-    def compile(self,msg: str,frame:any, loglevel:LoggerLevel, data=None )->str:
+    def compile(self,msg_obj:LoggerMessage )->str:
         """
             Compiles the given data into a string
 
@@ -259,14 +247,14 @@ class Formatter:
                 - list[FormatterTagStruct]
         """
 
-        form = self.get_tags(loglevel)
+        form = self.get_tags(msg_obj.log_level)
         # print(form)
         conf = self._conf
-        val_table={ 'msg':msg,
-                    'loglevel':loglevel,
-                    'data':data,
-                    'logger':self.logger_name,
-                    'frame':frame
+        val_table={ 'msg':msg_obj.msg,
+                    'loglevel':msg_obj.log_level,
+                    'data':msg_obj.data,
+                    'logger':msg_obj.logger_name,
+                    'frame':msg_obj.frame
                     }
 
         out=""
@@ -274,7 +262,7 @@ class Formatter:
             # print(form)
 
             func = FormTags.by_name(tagstruct.formtag.upper())
-            form_data = frame
+            form_data = msg_obj.frame
             if tagstruct.formtag in val_table:
                 form_data = val_table[tagstruct.formtag]
             res = func(form_data,*tagstruct.args)

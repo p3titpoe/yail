@@ -53,6 +53,7 @@ class FormatterTag:
                    }
     cnt:int = 0
 
+
 @dataclass(init=False)
 class BaseFormatter:
     """

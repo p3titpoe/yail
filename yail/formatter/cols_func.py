@@ -33,6 +33,7 @@ def package_func(frame:inspect.FrameInfo,*args)->str:
         out += f"{library[x]}."
     out = out[:-1]
     return out
+
 def package_func_functions(frame, show:str)->str:
     nn =frame.f_code.co_name
     argsval:dict = {}
@@ -135,10 +136,12 @@ def data_func(*args):
 
 
 def loglevel_func(level:LoggerLevel,what:str)->str:
+    # print("JSJDJDS ", level)
     out:dict ={'name':level.name,
                'value':level.value
                }
     return out[what]
+
 def lineno_func(frame:inspect.FrameInfo,*args):
     linenr = frame.f_lineno
     mr = args[0].split('pad')

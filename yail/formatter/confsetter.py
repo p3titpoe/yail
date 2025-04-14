@@ -1,7 +1,25 @@
 from dataclasses import dataclass,field
 from enum import Enum
-from .confsetter_func import *
-from . import base_template as base_templ
+# from cols_func import package_func,msg_func,data_func,loglevel_func,logger_func,lineno_func
+from yail.formatter.cols_func import *
+from yail.formatter import base_template as base_templ
+from yail.formatter.columns import ColumnType,ColumnSetup
+
+class FormTags(Enum):
+    # DATE = date_func
+    PACKAGE = package_func
+    MSG = msg_func
+    DATA = data_func
+    LOGLEVEL = loglevel_func
+    LINENO = lineno_func
+    LOGGER = logger_func
+
+
+    @classmethod
+    def by_name(cls, name: str):
+        att = getattr(cls, name)
+        return att
+
 
 @dataclass
 class FormatterTagStruct:
@@ -32,7 +50,7 @@ class FormTags(Enum):
         return att
 
 
-def make_tagconfs_from_confline(form:str)->list[FormatterTagStruct]:
+def make_tagconfs_from_confline(form:str)->list[ColumnSetup]:
     """
         Breaks the format line into columns and their settings for further processing
 
@@ -49,24 +67,24 @@ def make_tagconfs_from_confline(form:str)->list[FormatterTagStruct]:
     #Break up the token
     configlines = form.split(":")
     for line in configlines:
-        tagstruct = FormatterTagStruct()
+        tagstruct = ColumnSetup()
         #check for column width
         sp = line.split("|")
         command = sp[0]
         if len(sp) == 2:
             # command = sp[0]
             col_options = sp[1].split()
-            tagstruct.column_width = int(col_options[0])
+            tagstruct.width = int(col_options[0])
             if len(col_options) == 2:
-                tagstruct.column_align = col_options[1]
+                tagstruct.align = col_options[1]
 
         command_test = command.split(" ")
         if len(command_test) > 1:
             command = command_test[0]
             options = command_test[1:]
 
-        tagstruct.formtag = command
-        tagstruct.args = options
+        tagstruct.htype = command
+        tagstruct.setts = options
         out.append(tagstruct)
     return out
 
@@ -233,3 +251,6 @@ class FormatterConfig:
 
         pass
 
+#
+# fc = FormatterConfig()
+# print(fc.log_info)

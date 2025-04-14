@@ -25,6 +25,10 @@ class BaseHandler:
     def muted_channels(self)->list[LoggerLevel]:
         return self._muted_channels
 
+    @property
+    def fmt(self)->Formatter:
+        return self._formatter
+
 
     def mute_channels(self,ch:LoggerLevel|list[LoggerLevel])->list[LoggerLevel]:
         """
@@ -66,7 +70,7 @@ class BaseHandler:
 
         return self.muted_channels
 
-    def process_loggermsg(self:LoggerMessage)->None:
+    def process_loggermsg(self, msg_obj:LoggerMessage)->None:
         """
         Has to be implemented by kids
         """

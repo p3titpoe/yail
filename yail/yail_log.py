@@ -1,9 +1,9 @@
 import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
-from .logic import *
-from .formatter.formatter import Formatter
-from handlers.console import ConsoleHandler
+from yail.logic import *
+from yail.formatter.formatter import Formatter
+from yail.handlers.console import ConsoleHandler
 
 
 
@@ -50,18 +50,20 @@ class BaseLogger:
         if external_frame is not None:
             act_fram = external_frame
 
-        msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
+        # msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
         # msg = f'{module_name}.{qual_name}'
         # print(msg)
         msg_obj = LoggerMessage(logger_name=self.loggername, log_level=loglevel,msg=info,frame=act_fram,data=data)
         self.__base_output_function(msg_obj)
 
     def __base_output_function(self,data:LoggerMessage)->None:
+        self._handler.process_loggermsg(msg_obj=data)
         if not self.mute_all:
             self.cache.register(data)
             if data.log_level.value >= self.log_level.value:
                 if not self.console:
-                    print(data.msg)
+                    # print(data.msg)
+                    pass
 
     @property
     def log_level(self)->LoggerLevel:

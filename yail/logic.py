@@ -23,9 +23,12 @@ class LoggerMessage:
     """
         Dataclass representing a LoggerMessage
     """
-    sender: str
+    logger_name: str
     log_level: LoggerLevel
     msg: str
+    frame:any
+    data:any
+
 
 @dataclass(repr=False)
 class BaseData:
@@ -123,6 +126,7 @@ class BaseData:
 
         """
         return self._keypairs()
+
 
 @dataclass(repr=False)
 class Registry:
@@ -256,8 +260,6 @@ class Registry:
         return reg_id
 
 
-
-
 @dataclass(repr=False)
 class LoggerCache(Registry):
     """
@@ -346,11 +348,13 @@ class LoggerCache(Registry):
         self.max_len = new_size
         return out
 
+
 @dataclass
 class LoggerLogParameters:
     loglevel: LoggerLevel
     qual_name: str = None
     function_name:str = None
+
 
 @dataclass
 class LoggerCacheline:
@@ -363,7 +367,6 @@ class LoggerCacheline:
     log_level: LoggerLevel = LoggerLevel.DEBUG
     cache: LoggerCache = None
 
-
     def __post_init__(self):
         """
         | Generates the needed information for the logic of MasterLoggerCache
@@ -372,6 +375,7 @@ class LoggerCacheline:
         self.name = self.logger._name
         self.log_level = self.logger.log_level
         self.cache = self.logger.cache
+
 
 @dataclass
 class MasterLoggerCache(LoggerCache):

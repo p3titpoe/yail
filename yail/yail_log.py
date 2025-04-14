@@ -52,7 +52,7 @@ class BaseLogger:
         msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
         # msg = f'{module_name}.{qual_name}'
         # print(msg)
-        msg_obj = LoggerMessage(self.loggername, loglevel, msg)
+        msg_obj = LoggerMessage(logger_name=self.loggername, log_level=loglevel,msg=info,frame=act_fram,data=data)
         self.__base_output_function(msg_obj)
 
     def __base_output_function(self,data:LoggerMessage)->None:

@@ -22,13 +22,55 @@ class BaseHandler:
         pass
 
     @property
-    def muted_channels(self)->list[str]:
+    def muted_channels(self)->list[LoggerLevel]:
         return self._muted_channels
 
 
+    def mute_channels(self,ch:LoggerLevel|list[LoggerLevel])->list[LoggerLevel]:
+        """
+        Mutes the given log channels
+
+        PARAMETER:
+           - ch(LoggerLevel | list[LoggerLevel)
+
+        RETURNS:
+           - mutedchannels(list[Loggerlevel[)
+        """
+
+        wrk_list = [ch]
+        if isinstance(ch,list):
+            wrk_list = ch
+        for lgl in wrk_list:
+            if lgl not in self._muted_channels:
+                self._muted_channels.append(lgl)
+
+        return self.muted_channels
+
+    def unmute_channels(self,ch:LoggerLevel|list[LoggerLevel])->list[LoggerLevel]:
+        """
+        Mutes the given log channels
+
+        PARAMETER:
+           - ch(LoggerLevel | list[LoggerLevel)
+
+        RETURNS:
+           - mutedchannels(list[Loggerlevel[)
+        """
+
+        wrk_list = [ch]
+        if isinstance(ch,list):
+            wrk_list = ch
+        for lgl in wrk_list:
+            if lgl not in self._muted_channels:
+                self._muted_channels.remove(lgl)
+
+        return self.muted_channels
 
     def process_loggermsg(self:LoggerMessage)->None:
-
+        """
+        Has to be implemented by kids
+        """
+        pass
 
 
 

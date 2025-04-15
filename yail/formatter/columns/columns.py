@@ -106,6 +106,17 @@ class BaseColumn:
 
 
     def compile(self,content:str)->str:
+        """
+        Compiles the given class and content to a string
+
+        PARAMETERS:
+            - content(str)
+
+        RETURNS:
+            - str
+
+
+        """
         len_c = len(content)
         trunc = "..."
         tmp  = content
@@ -134,6 +145,7 @@ class BaseColumn:
         content = "No Content"
         self.compile(content=content)
         pass
+
 
 @dataclass(init=False)
 class DateColumn(BaseColumn):

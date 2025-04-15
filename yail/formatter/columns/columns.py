@@ -8,7 +8,7 @@ class InnerColumnType(Enum):
     DATE = 'date'
     PACKAGE = "package"
     MSG = "msg"
-    LOGLVL = 'loglevel'
+    LOGLEVEL = 'loglevel'
     LINENO = 'lineno'
     DATA = 'data'
     LOGGER = 'logger'
@@ -100,8 +100,9 @@ class BaseColumn:
         out = f"{content}"
         fix = ""
         if self._fixed:
-            fix = f"{self._align_dict[self._align]}:{str(self._width)}"
-        return out+fix
+            endl = f"{self._align_dict[self._align]}{str(self._width)}"
+            fix = f"{out:{endl}}"
+        return fix
 
 
     def compile(self,content:str)->str:

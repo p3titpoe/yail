@@ -1,60 +1,17 @@
+import importlib
 from enum import Enum
 from dataclasses import dataclass,field
 from yail.logic import LoggerLevel,LoggerMessage
-from .confsetter import FormTags,FormatterConfig
+from .templater import Templater, importfile
 
 class FormatType(Enum):
-    CONSOLE = 10
-    FILE = 20
-    SOCKET = 30
-    WEB = 40
+    CONSOLE = importlib.import_module('yail.formatter.templates.base_console_template','templates')
+    FILE = importlib.import_module('yail.formatter.templates.base_file_template','templates')
+    SOCKET = importlib.import_module('yail.formatter.templates.base_socket_template','templates')
+    WEB = importlib.import_module('yail.formatter.templates.base_web_template','templates')
 
 
 @dataclass
-class FormatterTagStruct:
-    """
-        Configuration class for FormatterTag
-    """
-    formtag:str = ""
-    column_width:str = 0
-    column_align:str ="l"
-    args:list = field(init=False,default_factory=list)
-
-    def __post_init__(self):
-        self.column_width = int(self.column_width)
-
-@dataclass
-class FormatterTag:
-    """
-        Holds the format & stringed data and is
-        responsible for proper output of the f"" string
-
-    .. note::
-        If replace is longer than column it is truncated
-
-    Accpetable values for align:
-        - l = left
-        - c = centered
-        - r = right
-    """
-
-    name:str
-    replace: str = ""
-    column_align: str ="c"
-    _column_width: int = 0
-    _fixed: bool = True
-    _fmt: str = ""
-    _is_to_long:bool = False
-    _filler_len:int = 0
-    _filler = " "
-    _align_dict = {'l': '<',
-                   'c': '^',
-                   'r': '>'
-                   }
-    cnt:int = 0
-
-
-@dataclass(init=False)
 class BaseFormatter:
     """
         Formats the log string
@@ -118,35 +75,13 @@ class BaseFormatter:
 
     """
     _htype:FormatType
-    logger_name:str
-    _conf: FormatterConfig = field(default_factory=FormatterConfig)
+    _conf: Templater = None
     _tags:dict = field(default_factory=dict)
     _col_lens:dict = field(default_factory=dict)
 
     def __post_init__(self):
+        self._conf = Templater()
         pass
-
-    def _check_tags(self,taglist: list)->dict:
-        """
-            Convert tag list from format to a dict with tag : Formtag.
-
-            This is a convenience to let the user use a more lexical style for formats, like <<loglevel value>>
-
-        """
-        out:dict = {}
-        for tag in taglist:
-            option=""
-            #check for options, delimiter is Whtespace
-            if " " in tag:
-                option = tag.replace(" ", "_")
-            else:
-                option = tag
-            out[tag] = option.upper()
-        return out
-
-    @property
-    def format(self)->str:
-        return self._active_format
 
     @property
     def conf(self):
@@ -180,7 +115,6 @@ class BaseFormatter:
             setattr(self,f"_active_format",fmt)
             # self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
-
     def compile(self,msg_obj:LoggerMessage )->str:
         """
             Compiles the given data into a string
@@ -192,38 +126,27 @@ class BaseFormatter:
                 - data(any|None)
 
             RETURNS:
-                - list[FormatterTagStruct]
+                - string
         """
 
-        form = self.get_format(msg_obj.log_level)
+        tmpl = self.get_format(msg_obj.log_level)
         # print(form)
         conf = self._conf
-        val_table={ 'msg':msg_obj.msg,
-                    'loglevel':msg_obj.logger_name,
-                    'data':msg_obj.data,
-                    'logger':msg_obj.logger_name,
-                    'frame':msg_obj.frame
-                    }
+
 
         out=""
-        for i,tagstruct in enumerate(form):
-            # print(form)
+        for i,cols in enumerate(tmpl):
 
-            func = FormTags.by_name(tagstruct.formtag.upper())
-            form_data = msg_obj.frame
-            if tagstruct.formtag in val_table:
-                form_data = val_table[tagstruct.formtag]
-            res = func(form_data,*tagstruct.args)
-
-            composite = FormatterTag(tagstruct.formtag,res)
-            composite.set_column_width(tagstruct.column_width)
-            composite.column_align = tagstruct.column_align
-
-            sep = self._conf.columns_separator
-
-            tmp = f"{composite.compile()}{sep}"
-            if i == len(form)-1:
+            composite = cols.process(msg_obj)
+            sep = "::"
+            # print(composite)
+            tmp = f"{composite}{sep}"
+            if i == len(tmpl)-1:
                 tmp = tmp[:-2]
             out += tmp
 
         return out
+
+class ConsoleFormatter(BaseFormatter):
+    _colord:bool = False
+    _colord_conf:dict = None

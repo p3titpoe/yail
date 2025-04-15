@@ -2,8 +2,8 @@ import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
 from yail.logic import *
-from yail.formatter.formatter import Formatter
-from yail.handlers.console import ConsoleHandler
+# from yail.formatter.formatter import
+from yail.handlers.console import ConsoleHandler,HandlerType
 
 
 
@@ -32,7 +32,7 @@ class BaseLogger:
         self.parent = parent
         self._block_loglevel = block_loglevel
         self._cache = LoggerCache(30,self)
-        self._handler = ConsoleHandler()
+        self._handler = ConsoleHandler(HandlerType.CONSOLE)
 
     def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
         """
@@ -93,7 +93,7 @@ class BaseLogger:
         return self._name
 
     @property
-    def handler(self)->Formatter:
+    def handler(self):
         return self._handler
 
     def set_loglevel(self,loglevel:LoggerLevel)->None:

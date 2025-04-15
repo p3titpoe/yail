@@ -4,7 +4,7 @@ class ColumnType(Enum):
     DATE = DateColumn
     PACKAGE = PackageColumn
     MSG = MsgColumn
-    LOGLVL = LoglevelColumn
+    LOGLEVEL = LoglevelColumn
     LINENO = LinenoColumn
     DATA = DataColumn
     LOGGER = LoggerColumn

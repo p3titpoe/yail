@@ -1,12 +1,8 @@
 import re
 import inspect
-from datetime import datetime
-from enum import Enum
 from dataclasses import dataclass,field
-from importlib import import_module
 from yail.logic import LoggerLevel, LoggerMessage
-import yail.formatter.base_template as base_templ
-from .confsetter import FormatterConfig,FormTags
+from .templater import Templater,FormTags
 
 
 

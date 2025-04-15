@@ -1,8 +1,5 @@
 import inspect
 import yail as logger
-from yail.formatter.formatter import Formatter
-from yail.logic import LoggerLevel
-# fmt = logger.formatter.Formatter("Test")
 
 log = logger.get_logger('test2',logger.LoggerLevel.WARNING,public=True)
 log2 = logger.get_logger('test22',logger.LoggerLevel.ERROR,block_level=True)

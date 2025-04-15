@@ -3,7 +3,7 @@ import inspect
 import testing.nested.nested
 import yail as logger
 from yail import LoggerLevel
-import yail.formatter.formatter
+# import yail.formatter.formatter
 from testing.models import testclass,testclassb
 from testing.nested.innernested.blested import  nestedclass
 

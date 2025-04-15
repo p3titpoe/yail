@@ -1,7 +1,8 @@
+import random, string
 from pydoc import importfile
 from dataclasses import dataclass,field
 from yail.formatter.cols_func import *
-from yail.formatter import base_template as base_tmpl
+from yail.formatter.templates import base_template as base_tmpl
 from yail.formatter.columns import ColumnType,ColumnSetup,BaseColumn
 
 
@@ -58,14 +59,15 @@ class Templater:
     _init_long:str = (f"date iso:logger name|8 c:loglevel name|8:"
                       f"lineno pad4|13 c:package mcf args|33 l:"
                       f"msg|100")
-    _init_default_attr:str ="active short long"
+    _init_default_attr:str ="short long"
     _init_log_attr:str ="debug info warning error critical fatal"
     _lib: dict = field(init=False,default_factory=dict)
     _short:bool = False
 
     def __post_init__(self):
         if self._name is None:
-            exit("Templater has no name!")
+            length = 6
+            self._name = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
         base_templ = base_tmpl
         if self._template_path is not None:
@@ -83,13 +85,13 @@ class Templater:
             self._tokenize_fmt(x,config)
 
         self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
-
+        self._columns_separator = base_templ.columns_separator
     def _tokenize_fmt(self,name:str, configline:str)->None:
         tokens = make_tagconfs_from_confline(configline)
         self._lib[name]: list[ColumnSetup] = tokens
 
     def _create_colclass(self,conf:ColumnSetup)->BaseColumn:
-        colclass = ColumnType.by_name(conf.htype.upper())
+        colclass = ColumnType.by_name(conf.htype.upper()).value
         return colclass(conf)
 
     def _return_col_config(self,name:str)->list[ColumnSetup]:
@@ -153,10 +155,9 @@ class Templater:
         self._short = True if not self._short else False
         self.default_active = self.default_long if not self._short else self.default_short
 
-    def column_by_name(self, loglevel:LoggerLevel)->BaseColumn:
+    def column_by_name(self, loglevel:LoggerLevel)->list[BaseColumn]:
         fmt_name = f"log_{loglevel.name.lower()}"
-        fmt_class = ColumnType.by_name(loglevel.name)
-        fmt = self._return_col_config(fmt_name)
+        fmt = self._return_conf(fmt_name)
         # print(f"FMT:::   {fmt_name}")
         return fmt
 

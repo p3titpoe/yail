@@ -1,7 +1,7 @@
 from enum import Enum
 from dataclasses import dataclass,field
 from yail.logic import LoggerLevel,LoggerMessage
-from yail.formatter.formatter import Formatter
+from yail.formatter import FormatterType,BaseFormatter
 
 
 class HandlerType(Enum):
@@ -11,22 +11,28 @@ class HandlerType(Enum):
     WEB = 40
 
 
-@dataclass
+@dataclass(init=False)
 class BaseHandler:
     _htype:HandlerType = None
-    _formatter:Formatter = None
+    _formatter:BaseFormatter = None
     _paths:dict = field(init=False,default_factory=dict)
     _muted_channels:list = field(init=False,default_factory=dict)
 
+    def __init__(self,htype:HandlerType):
+        self._htype  = htype
+        self._formatter = FormatterType.by_name(self._htype.name).value(htype)
+        self.__post_init__()
+
     def __post_init__(self):
         pass
+
 
     @property
     def muted_channels(self)->list[LoggerLevel]:
         return self._muted_channels
 
     @property
-    def fmt(self)->Formatter:
+    def fmt(self)->BaseFormatter:
         return self._formatter
 
 

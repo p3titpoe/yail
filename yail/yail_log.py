@@ -285,6 +285,10 @@ class LoggerManager:
         self._root_logger = BaseLogger(name,self,log_level)
         self._root_cache = MasterLoggerCache(200,self)
 
+    def _getlogger_for_sys(self, name:str)->BaseLogger:
+        cl: LoggerCacheline = self.rootcache.cache_entry_by_name(name)
+        return cl.logger
+
     def _logger_actions(self,loggerlist:list,action:str)->None:
         """
             Backend functions for most of the following functions.
@@ -311,11 +315,14 @@ class LoggerManager:
                            "unmute data",
                            "mute data",
                            ]
+        print(loggerlist)
+
         for log in loggerlist:
-            logger:BaseLogger = self.get_logger_by_name(log)
+            logger:BaseLogger = self._getlogger_for_sys(log)
             do,what = action.split(" ")
             if action in actions_list:
                 logbool = getattr(logger,what)
+
                 if do == "mute":
                     if not logbool:
                         logfunc = getattr(logger,f"toggle_{what}")
@@ -324,6 +331,9 @@ class LoggerManager:
                     if logbool:
                         logfunc = getattr(logger,f"toggle_{what}")
                         logfunc()
+
+                print("LOGBOOL ::", logbool)
+
 
     def mute_all_or_sip(self,sip:str = None)->None:
         """

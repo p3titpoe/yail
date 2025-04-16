@@ -16,6 +16,7 @@ class BaseHandler:
     _htype:HandlerType = None
     _formatter:BaseFormatter = None
     _paths:dict = field(init=False,default_factory=dict)
+    _is_muted:bool = False
     _muted_channels:list = field(init=False,default_factory=dict)
 
     def __init__(self,htype:HandlerType):

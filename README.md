@@ -14,7 +14,7 @@ Loggers in yail can be locked to a certain log level and made shareable.
 
 It features a simple template system for different log levels and overrides on an output handler basis.  
 
-###Available Features 
+### Available Features 
 > [!NOTE]
 > As of April 2025
 

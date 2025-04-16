@@ -130,6 +130,9 @@ class BaseColumn:
 
         fc = lib[self._fill_space]
         out = fc(content=tmp)
+        if out == "":
+            print("KKKKK:: ", out, self._htype)
+
         return out
 
 
@@ -143,8 +146,7 @@ class BaseColumn:
                Must implement the compile function!
         """
         content = "No Content"
-        self.compile(content=content)
-        pass
+        return self.compile(content=content)
 
 
 @dataclass(init=False)
@@ -182,6 +184,7 @@ class DateColumn(BaseColumn):
                      'cstm':self.custom}
 
         content = possibles[self._setts[0]]()
+        print("CONTENT ::DATECOLUMN", content)
         return self.compile(content)
 
 @dataclass(init=False)

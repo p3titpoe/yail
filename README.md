@@ -50,7 +50,7 @@ logger.info("Hello World")
 logger.warning("Hello World! You are burning")
 ```
 
-This is ok for small projects where you only need one logger and then filter by log level.
+This is ok for small projects where you only need one logger and then filter by log level.<br>
 yail features an introspective package column tracking up to module level who called the log function.
 
 > [!warning]
@@ -62,7 +62,7 @@ yail features an introspective package column tracking up to module level who ca
 
 
 ##### Get a new logger
-yail gives you enough flexibility for creating loggers as to adapt to most use cases.\n
+yail gives you enough flexibility for creating loggers as to adapt to most use cases.<br>
 For example, loggers are NOT shareable per default, but they can be set to public and so be retrieved everywhere yail is imported.
 
 ```python
@@ -91,8 +91,8 @@ log.info("Hello World")
 ```
 
 ##### Orchestrate loggers
-Let's assume you have several loggers created through your code and are working on a specific part of it.\n
-Sometimes you might want to single out different loggers or mute others to compare outputs for example.\n
+Let's assume you have several loggers created through your code and are working on a specific part of it.<br>
+Sometimes you might want to single out different loggers or mute others to compare outputs for example.<br>
 As long as yail is imported you can control them from anywhere.
 
 ```python

@@ -13,12 +13,16 @@ def muteall()->None:
     LOGGER.mute_all_or_sip()
 def muteoff()->None:
     mute()
-def sip(loggername:str)->None:
-    LOGGER.mute_all_or_sip(loggername)
-    info(f"Solo in Place for {loggername}")
+def sip(loggername:str|None)->None:
+    msg = "Solo In Plac OFF"
+    if loggername is None:
+        solo()
 
-def sipoff()->None:
-    solo()
+    else:
+        LOGGER.mute_all_or_sip(loggername)
+        msg=f"Solo in Place for {loggername}"
+    info(msg)
+
 
 def solo(name:str = None)->None:
     if name is None:

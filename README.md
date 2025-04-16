@@ -14,6 +14,29 @@ Loggers in yail can be locked to a certain log level and made shareable.
 
 It features a simple template system for different log levels and overrides on an output handler basis.  
 
+###Available Features 
+> [!NOTE]
+> As of April 2025
+
+**Management**
+- [x] Global Mute, Solo and Set Levels
+- [x] Stop processing
+- [] Mute by log level
+- [] Grouping
+- [] Colored output
+
+**Loggers**
+- [x] Share logger
+- [x] Block Logger at init level
+- [x] Mute, Solo & Set level
+
+**Output Handlers**
+- [x] Console
+- [] File
+- [] Web
+- [] Socket
+
+
 
 ### Basic Usage
 
@@ -39,8 +62,8 @@ yail features an introspective package column tracking up to module level who ca
 
 
 ##### Get a new logger
-yail gives you enough flexibility for creating loggers as to adapt to most use cases.
-For example, active loggers are NOT shareable per default, but they can be set to public and so be retrieved everywhere yail is imported.
+yail gives you enough flexibility for creating loggers as to adapt to most use cases.\n
+For example, loggers are NOT shareable per default, but they can be set to public and so be retrieved everywhere yail is imported.
 
 ```python
 #main.py
@@ -57,6 +80,7 @@ log = logger.get_logger(name='MyLogger',
 
 log.info("Hello World")
 ```
+
 ##### Get a created public logger
 ```python
 #other.py
@@ -65,26 +89,30 @@ import yail as logger
 log = logger.logger_by_name('MyLogger')
 log.info("Hello World")
 ```
-##### Orchestrate 
 
-#### Case 1: Single loggers for warning and error messages
+##### Orchestrate loggers
+Let's assume you have several loggers created through your code and are working on a specific part of it.\n
+Sometimes you might want to single out different loggers or mute others to compare outputs for example.\n
+As long as yail is imported you can control them from anywhere.
+
 ```python
-#Main py
-import yail as logger 
-from yail import LoggerLevel
-
-#Define the loggers
-warn_logger = logger.get_logger('Warn')
-warn_logger.set_loglevel(LoggerLevel.WARNING)
-err_logger = logger.get_logger('Error')
-err_logger.set_loglevel(LoggerLevel.ERROR)
-
-#other py
+#another.py
 import yail as logger
 
-warn = logger.logger_by_name("Warn")
+#mute function
+logger.mute('MyLogger')
+logger.mute('MyLogger4')
 
-logger.warning("Hello World! You are burning")
+logger.muteall()
+logger.muteoff()
+
+#Solo In Place
+logger.sip('MyLogger')
+logger.sip() #offs the sip
+
+
+
 
 
 ```
+

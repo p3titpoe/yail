@@ -1,5 +1,5 @@
-By modules
-==========
+Yail package
+============
 
 Logic
 ---------
@@ -8,18 +8,16 @@ Logic
    :members:
    :undoc-members:
    :member-order: bysource
-   :show-inheritance:
 
 Formatter
 ---------
 .. warning::
-    This module is fuctional but still under heavy rework
+    This module is functional but still under heavy rework
 
 .. automodule:: yail.formatter
    :members:
    :undoc-members:
    :member-order: bysource
-   :show-inheritance:
 
 Logger
 ---------

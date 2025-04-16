@@ -21,7 +21,8 @@ class BaseHandler:
 
     def __init__(self,htype:HandlerType):
         self._htype  = htype
-        self._formatter = FormatterType.by_name(self._htype.name).value(htype)
+        self._formatter = FormatterType.by_name(self._htype.name).value(self._htype)
+
         self.__post_init__()
 
     def __post_init__(self):

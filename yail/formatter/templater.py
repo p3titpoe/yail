@@ -52,7 +52,7 @@ class Templater:
         Generates *Column classes
     """
     _name:str = None
-    _template_path:str = None
+    _template_path:any = None
     _columns_separator: str = "::"
     _default_cols_len:list = field(init=False, default_factory=list)
     _init_short:str = "date today|26:logger name|20:loglevel name|10"
@@ -71,7 +71,7 @@ class Templater:
 
         base_templ = base_tmpl
         if self._template_path is not None:
-            base_templ = importfile(self._template_path)
+            base_templ = self._template_path
 
         def_list = [f"default_{x}" for x in self._init_default_attr.split(" ")]
         def_list.extend([f"log_{x.name.lower()}" for x in LoggerLevel if x.value >= 10])
@@ -86,9 +86,10 @@ class Templater:
 
         self._tokenize_fmt('default_active', getattr(base_templ,'default_long'))
         self._columns_separator = base_templ.columns_separator
-    def _tokenize_fmt(self,name:str, configline:str)->None:
-        tokens = make_tagconfs_from_confline(configline)
-        self._lib[name]: list[ColumnSetup] = tokens
+
+    def _tokenize_fmt(self,name:str, configline:ColumnSetup)->None:
+        # tokens = make_tagconfs_from_confline(configline)
+        self._lib[name]: list[ColumnSetup] = configline
 
     def _create_colclass(self,conf:ColumnSetup)->BaseColumn:
         colclass = ColumnType.by_name(conf.htype.upper()).value

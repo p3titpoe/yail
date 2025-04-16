@@ -13,10 +13,6 @@ class ConsoleHandler(BaseHandler):
         _colors:bool = False
         _color_engine:any = None
 
-    def __post_init__(self):
-        self._htype = HandlerType.CONSOLE
-
-
 
     def process_loggermsg(self,msg_obj:LoggerMessage) ->None:
         kk = self._formatter.compile(msg_obj)

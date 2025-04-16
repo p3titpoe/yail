@@ -15,26 +15,26 @@ def infoprint():
 
 hh =logger.get_logger("OOOOO")
 
-# logger.master_loglevel(LoggerLevel.CRITICAL)
+logger.master_loglevel('info')
 # infoprint()
 tst = logger.logger_by_name('test2')
 
 tst.log("Log has happened")
 
-logger.muteall()
-logger.warning("BLAAA")
+# logger.muteall()
+# logger.warning("BLAAA")
 hh.debug("trztrztrztrzt")
-
-logger.master_loglevel('critical')
-# # infoprint()q
+#
+# logger.master_loglevel('critical')
+# # # infoprint()q
 hh.error("ERRtruzpoipökjklhh")
 # hh.info("INFOOOOOOO")
 tst.log("blblblblblb")
-
-# logger.master_loglevel('critical')
-tst.log("33333blblblblblb")
-hh.info("INFO")
-# fmt = yail.formatter.Formatter("Test")
+#
+# # logger.master_loglevel('critical')
+# tst.log("33333blblblblblb")
+# hh.info("INFO")
+# # fmt = yail.formatter.Formatter("Test")
 oo = testclassb()
 bb = testclass()
 class testclassc:
@@ -47,22 +47,14 @@ class testclassc:
                ",just to check how the it displays in the colnsole,considering allmeans.")
         hh.debug(msg)
 
-    def haha(self):
+    def haha(self,v:int=2,b:int=3):
         # fmt.conf.default_long = "loglevel name:msg"
-        hh.info("vvvvvvv")
+        hh.info(f"Result :{v*b}")
         logger.debug("mnbmnb",{2:45,4:"tztut",0:"loki"})
 oo.blas()
-print('hh cominng')
 hh.log("Logger passed the settings")
-logger.master_loglevel(LoggerLevel.CRITICAL)
-print('hh cominng')
-hh.log("Logger passed the settings")
-
-# logger.master_loglevel('error')
-# logger.master_loglevel('error')
-# bb.blas()
-# # infoprint()
-# nn = testclassc(bb="WWWWWW")
-# nn.harrr()
-# nn.haha()
-# log_types = []
+# logger.master_loglevel(LoggerLevel.CRITICAL)
+# hh.log("Logger passed the settings")
+nn = testclassc(bb="WWWWWW")
+nn.harrr()
+nn.haha()

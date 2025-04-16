@@ -98,12 +98,24 @@ class BaseColumn:
 
     def _f_spacer(self,content:str):
         out = f"{content}"
-        fix = ""
+        # print("f_spacer :: 1 :: ",out)
+        fix = out
         if self._fixed:
-            endl = f"{self._align_dict[self._align]}{str(self._width)}"
+            endl = f"{self._filler}{self._align_dict[self._align]}{str(self._width)}"
+
+            # fix = f"{out}{' ':{endl}}"
             fix = f"{out:{endl}}"
+        # a print("f_spacer :: 2 :: ",self._htype,"ALIGN:: ",self._align, endl)
+
         return fix
 
+    @property
+    def width(self)->int:
+        return self._width
+
+    @property
+    def filler(self)->str:
+        return self._filler
 
     def compile(self,content:str)->str:
         """
@@ -130,8 +142,10 @@ class BaseColumn:
 
         fc = lib[self._fill_space]
         out = fc(content=tmp)
-        if out == "":
-            print("KKKKK:: ", out, self._htype)
+        # if out == "":
+        #     print("compile:: ", out,tmp)
+        # # # else:
+        # # #     print("KKKKK::", out)
 
         return out
 
@@ -184,7 +198,7 @@ class DateColumn(BaseColumn):
                      'cstm':self.custom}
 
         content = possibles[self._setts[0]]()
-        print("CONTENT ::DATECOLUMN", content)
+        # print("CONTENT ::", content, self._setts[0], self._setts)
         return self.compile(content)
 
 @dataclass(init=False)
@@ -202,7 +216,12 @@ class DataColumn(BaseColumn):
 
     def process(self,lm:LoggerMessage)->str:
         # return self.compile(lm.data)
-        return "OVERIDDWEN IN DATACOLUMN"
+        out = "NONE"
+        if lm.data is not None:
+            res = "OVERIDDWEN IN DATACOLUMN"
+            comp =  self.compile(res)
+            out = comp
+        return out
 
 @dataclass(init=False)
 class LinenoColumn(BaseColumn):
@@ -250,6 +269,8 @@ class PackageColumn(BaseColumn):
         wanted_keys = [k for k in lib.keys()]
         for k,v in lib.items():
             if k == 'm':
+                if mod[0] == "__main__":
+                    mod[0] = "Main"
                 lib[k] = mod[0]
 
                 if len(mod) > 1:
@@ -287,7 +308,11 @@ class PackageColumn(BaseColumn):
             tmp = [f"{k} = {v}" for k,v in argsval.items()]
             out_arg = ",".join(tmp)
 
-        return f"{fname}({out_arg})"
+        out = f"{fname}({out_arg})"
+        if fname == "":
+            out = ""
+
+        return out
 
     def process(self,lm:LoggerMessage)->str:
         library: dict = {x: "" for x in self._setts[0]}
@@ -297,7 +322,8 @@ class PackageColumn(BaseColumn):
 
         out: str = ""
         for x in self._setts[0]:
-            out += f"{library[x]}."
+            if library[x] != "":
+                out += f"{library[x]}."
         out = out[:-1]
         return self.compile(out)
 

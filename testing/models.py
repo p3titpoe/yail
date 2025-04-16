@@ -39,3 +39,10 @@ class testclassb:
         # return fmt.compile_new("TEST", inspect.currentframe(), LoggerLevel.DEBUG)
 
         # return data
+
+def tsrtsr(kk:str,vv:str)->str:
+    out = f"{kk} = {vv}"
+    log.info(f"Function output:: {out}")
+    # print(out)
+
+tsrtsr('heloo','wöörld')

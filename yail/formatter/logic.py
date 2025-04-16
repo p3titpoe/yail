@@ -2,13 +2,18 @@ import importlib
 from enum import Enum
 from dataclasses import dataclass,field
 from yail.logic import LoggerLevel,LoggerMessage
-from .templater import Templater, importfile
+from .templater import Templater, importfile,BaseColumn
 
 class FormatType(Enum):
     CONSOLE = importlib.import_module('yail.formatter.templates.base_console_template','templates')
     FILE = importlib.import_module('yail.formatter.templates.base_file_template','templates')
     SOCKET = importlib.import_module('yail.formatter.templates.base_socket_template','templates')
     WEB = importlib.import_module('yail.formatter.templates.base_web_template','templates')
+
+    @classmethod
+    def by_name(cls, name: str):
+        att = getattr(cls, name)
+        return att
 
 
 @dataclass
@@ -74,13 +79,18 @@ class BaseFormatter:
                 * None
 
     """
-    _htype:FormatType
+    ctype:any
+    _htype:FormatType = None
     _conf: Templater = None
     _tags:dict = field(default_factory=dict)
     _col_lens:dict = field(default_factory=dict)
+    _total_msglen_to_msgcolumn:int = 0
+
 
     def __post_init__(self):
-        self._conf = Templater()
+        self._total_msglen_to_msgcolumn = 0
+        self._htype = FormatType.by_name(self.ctype.name)
+        self._conf = Templater(_template_path=self._htype.value)
         pass
 
     @property
@@ -95,7 +105,7 @@ class BaseFormatter:
         return self._conf.default_active
 
     def get_format(self, form:LoggerLevel = None) -> list:
-        fmt:list = []
+        fmt:list[BaseColumn] = []
         if form is None:
             fmt =self._conf.default_active
         else:
@@ -129,20 +139,32 @@ class BaseFormatter:
                 - string
         """
 
-        tmpl = self.get_format(msg_obj.log_level)
-        # print(form)
+        tmpl:list[BaseColumn] = self.get_format(msg_obj.log_level)
+        # print(tmpl)
         conf = self._conf
 
 
         out=""
-        for i,cols in enumerate(tmpl):
+        cnt = 0
+        sep = "::"
 
+        for i,cols in enumerate(tmpl):
             composite = cols.process(msg_obj)
-            sep = "::"
-            # print(composite)
-            tmp = f"{composite}{sep}"
-            if i == len(tmpl)-1:
-                tmp = tmp[:-2]
+            if cols._htype.name  in ['DATE']:
+                self._total_msglen_to_msgcolumn = len(composite)+len(sep)
+            # cnt += len(composite)
+            # print(i,composite)
+            comp =f"{composite}"
+            tmp = comp
+            if i != 0:
+                tmp = f"{sep}{composite}"
+            if cols._htype.name == "DATA":
+                if composite != "NONE":
+                    col_w = self._total_msglen_to_msgcolumn - len(sep)
+                    tmp = f"\n{cols.filler:{col_w}}{sep}{composite}"
+
+            if composite == "NONE":
+                tmp = ""
             out += tmp
 
         return out

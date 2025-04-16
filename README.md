@@ -21,9 +21,9 @@ It features a simple template system for different log levels and overrides on a
 **Management**
 - [x] Global Mute, Solo and Set Levels
 - [x] Stop processing
-- [] Mute by log level
-- [] Grouping
-- [] Colored output
+- [ ] Mute by log level
+- [ ] Grouping
+- [ ] Colored output
 
 **Loggers**
 - [x] Share logger
@@ -32,9 +32,9 @@ It features a simple template system for different log levels and overrides on a
 
 **Output Handlers**
 - [x] Console
-- [] File
-- [] Web
-- [] Socket
+- [ ] File
+- [ ] Web
+- [ ] Socket
 
 
 

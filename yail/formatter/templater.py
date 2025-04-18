@@ -6,45 +6,6 @@ from yail.formatter.templates import base_template as base_tmpl
 from yail.formatter.columns import ColumnType,ColumnSetup,BaseColumn
 
 
-def make_tagconfs_from_confline(form:str)->list[ColumnSetup]:
-    """
-        Breaks the format line into columns and their settings for further processing
-
-        PARAMETERS:
-            - form(str)
-
-        RETURNS:
-            - list[FormatterTagStruct]
-
-    """
-    options = []
-    command = ""
-    out =[]
-    #Break up the token
-    configlines = form.split(":")
-    for line in configlines:
-        tagstruct = ColumnSetup()
-        #check for column width
-        sp = line.split("|")
-        command = sp[0]
-        if len(sp) == 2:
-            # command = sp[0]
-            col_options = sp[1].split()
-            tagstruct.width = int(col_options[0])
-            if len(col_options) == 2:
-                tagstruct.align = col_options[1]
-
-        command_test = command.split(" ")
-        if len(command_test) > 1:
-            command = command_test[0]
-            options = command_test[1:]
-
-        tagstruct.htype = command
-        tagstruct.setts = options
-        out.append(tagstruct)
-    return out
-
-
 @dataclass
 class Templater:
     """
@@ -88,7 +49,6 @@ class Templater:
         self._columns_separator = base_templ.columns_separator
 
     def _tokenize_fmt(self,name:str, configline:ColumnSetup)->None:
-        # tokens = make_tagconfs_from_confline(configline)
         self._lib[name]: list[ColumnSetup] = configline
 
     def _create_colclass(self,conf:ColumnSetup)->BaseColumn:
@@ -111,6 +71,10 @@ class Templater:
     def _extract_colwidths(self,tokens:list[ColumnSetup])->list:
         tmp=[x.width for x in tokens]
         return tmp
+
+    @property
+    def name (self)->str:
+        return self._name
 
     @property
     def default_long(self)->list[BaseColumn]:

@@ -82,9 +82,15 @@ class BaseFormatter:
     ctype:any
     _htype:FormatType = None
     _conf: Templater = None
-    _tags:dict = field(default_factory=dict)
+    _table:dict = field(default_factory=dict)
+    _table_row_len = 170
+    _table_view:bool = False
+    _table_row_prepend:bool = True
     _col_lens:dict = field(default_factory=dict)
     _total_msglen_to_msgcolumn:int = 0
+    _total_msglen:int = 0
+    _data_frame_end:int  = 0
+    _data_view:bool = True
 
 
     def __post_init__(self):
@@ -125,6 +131,28 @@ class BaseFormatter:
             setattr(self,f"_active_format",fmt)
             # self._active_format = replace_tag_in_format(self._active_format, 'loggername', self.logger_name)
 
+    def make_table_line(self):
+        out=""
+        if not self._table_row_prepend:
+            out += "\n"
+        totlen = 0
+        cl:list[int] = [len(v)+1 for k,v in self._table.items() if k != "MSG"]
+        markers = []
+        for k in cl:
+            totlen += k
+            markers.append(totlen)
+        markers.append(self._table_row_len)
+
+        for i in range(1,self._table_row_len+1):
+            repl = "—"
+            if i in markers:
+                repl = self._conf._columns_separator
+
+            out += repl
+        if self._table_row_prepend:
+            out += "\n"
+        return out
+
     def compile(self,msg_obj:LoggerMessage )->str:
         """
             Compiles the given data into a string
@@ -141,31 +169,49 @@ class BaseFormatter:
 
         tmpl:list[BaseColumn] = self.get_format(msg_obj.log_level)
         # print(tmpl)
-        conf = self._conf
-
 
         out=""
-        cnt = 0
-        sep = "::"
+        sep = self._conf._columns_separator
+        comps = ""
+        table_view = ""
+        self._total_msglen = 0
+        self._table = {v._htype.name: v.process(msg_obj) for v in tmpl if v._htype.name != 'DATA'}
+        self._data_frame_end = sum([len(v)+len(self._conf._columns_separator) for k,v in self._table.items() if k not in ['DATA','MSG']])-len(self._conf._columns_separator)
+        tableview = self.make_table_line()
 
         for i,cols in enumerate(tmpl):
-            composite = cols.process(msg_obj)
-            if cols._htype.name  in ['DATE']:
-                self._total_msglen_to_msgcolumn = len(composite)+len(sep)
-            # cnt += len(composite)
-            # print(i,composite)
-            comp =f"{composite}"
-            tmp = comp
-            if i != 0:
-                tmp = f"{sep}{composite}"
-            if cols._htype.name == "DATA":
-                if composite != "NONE":
-                    col_w = self._total_msglen_to_msgcolumn - len(sep)
-                    tmp = f"\n{cols.filler:{col_w}}{sep}{composite}"
+            sep = sep
+            composite = ""
+            if cols._htype.name not in ['DATA']:
+                composite = self._table[cols._htype.name]
 
-            if composite == "NONE":
-                tmp = ""
-            out += tmp
+                if i != 0:
+                    composite = f"{sep}{composite}"
+
+                # if cols._htype.name != 'MSG':
+
+                if cols._htype.name == "DATE":
+                    self._total_msglen_to_msgcolumn = len(composite)
+
+                self._total_msglen += len(composite)+len(self._conf._columns_separator)
+                # self._table.append(self._total_msglen+len(sep))
+            else:
+                if self._data_view:
+                    if msg_obj.data is not None:
+                        cols._width = self._total_msglen_to_msgcolumn
+                        cols._colsep = sep
+                        composite = cols.process(msg_obj,self._table_row_len, self._table_view, self._data_frame_end,self._total_msglen_to_msgcolumn)
+                        # col_w = self._total_msglen_to_msgcolumn
+                        # composite = f"\n{cols.filler:{col_w}}{sep}{composite}"
+
+
+            comps += composite
+        out = comps
+        if self._table_view:
+            if self._table_row_prepend:
+                out = tableview+comps
+            else:
+                out += tableview
 
         return out
 

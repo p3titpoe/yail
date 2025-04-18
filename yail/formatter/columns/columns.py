@@ -1,9 +1,9 @@
 import inspect
 from datetime import datetime
 from dataclasses import dataclass,field
-from yail.logic import LoggerMessage, LoggerLevel
-from enum import Enum
-
+from yail.logic import LoggerMessage, LoggerLevel, Enum
+from types import ModuleType,MethodType,FunctionType
+from enum import EnumType
 class InnerColumnType(Enum):
     DATE = 'date'
     PACKAGE = "package"
@@ -22,6 +22,7 @@ class InnerColumnType(Enum):
 class ColumnSetup:
     htype:str = None
     align:str = "c"
+    colsep:str = "::"
     width:int = 0  #if zero, the width is dynamc
     setts:list = field(default_factory=list)
     filler:str = " "
@@ -41,6 +42,7 @@ class BaseColumn:
     _width:int = 0
     _align:str = "l"
     _filler:str = ""
+    _colsep = " "
     _fill_space = False
     _fixed:bool = True
     _setts:list = None
@@ -52,6 +54,7 @@ class BaseColumn:
     def __init__(self,sp:ColumnSetup):
         self._htype = InnerColumnType.by_name(sp.htype.upper())
         self._width = sp.width
+        self._colsep = sp.colsep
         self._align = sp.align
         self._filler = sp.filler
         self._fill_space = sp.fill_space
@@ -129,6 +132,8 @@ class BaseColumn:
 
 
         """
+        out = ""
+        # if content
         len_c = len(content)
         trunc = "..."
         tmp  = content
@@ -150,7 +155,7 @@ class BaseColumn:
         return out
 
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self,lm:LoggerMessage,*args)->str:
         """
             Process the class with given LoggerMessage
             Calls Setup First
@@ -192,7 +197,7 @@ class DateColumn(BaseColumn):
         """
         return self._dt.strftime(self.custom_format)
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         possibles = {'iso': self.isodate,
                      'today':self.today,
                      'cstm':self.custom}
@@ -206,7 +211,7 @@ class LoggerColumn(BaseColumn):
     def __init__(self,sp:ColumnSetup):
         super().__init__(sp=sp)
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         return self.compile(lm.logger_name)
 
 @dataclass(init=False)
@@ -214,21 +219,150 @@ class DataColumn(BaseColumn):
     def __init__(self,sp:ColumnSetup):
         super().__init__(sp=sp)
 
-    def process(self,lm:LoggerMessage)->str:
-        # return self.compile(lm.data)
-        out = "NONE"
-        if lm.data is not None:
-            res = "OVERIDDWEN IN DATACOLUMN"
-            comp =  self.compile(res)
-            out = comp
+        self.prefix:str = ""
+        self.total_len:int = 0
+        self.dataframe_end:int = 0
+        self.empty_offset:int = 0
+
+    def _fill_data_framend(self,inp:str=None,offset:bool=False,offlen:int=0)->str:
+        offsetlen = self.empty_offset+len(self._colsep)
+
+        inlen = offsetlen
+        if inp is not None:
+            inlen = len(inp)
+            if offset:
+                inlen -= offsetlen
+            inlen -=offlen
+        # print(self.dataframe_end)
+        fill = " "*(self.dataframe_end-inlen)
+        fill += self._colsep
+        return fill
+
+    def pass_through(self,data:any, *args)->list[str]:
+        dd = type(data)
+        print("PT",data)
+        out= f"{self.prefix}{dd}"
+        return [out]
+
+    def display_list(self,lst:list, *args)->list[str]:
+        out = f"{self.prefix}[{",".join([str(x) for x in lst])}]"
+        return [out]
+
+    def display_dict(self,lst:dict,*args)->list[str]:
+        out = []
+        tmp = [f"{self.prefix} {k:<} => {v}" for k,v in lst.items()]
+        out.append(self.prefix+"{")
+        out.extend(tmp)
+        out.append(self.prefix+"}")
         return out
+
+    def display_float(self,lst:float,*args)->list[str]:
+        out = str(round(lst,4))
+        return [out]
+
+    def display_object(self,lst:object)->list[str]:
+        out = []
+        name_cols = []
+        ordr_cols = []
+        # print("DISPSS :: ",out)
+        if isinstance(lst,ModuleType):
+            name = lst.__name__.split(".")[-1]
+            pack = lst.__package__
+            doc = lst.__doc__.split("\n")[0]
+            name_cols = ['Module','Package','Docstring']
+            ordr_cols = [name,pack,doc]
+
+        if inspect.isclass(lst):
+            name = lst.__name__.split(".")[-1]
+            pack = lst.__module__
+            doc = lst.__doc__.split("\n")[0]
+            attr = [x for x in lst.__static_attributes__]
+            name_cols = ['Classname','Package','Attributes','Docstring']
+            ordr_cols = [name,pack,attr,doc]
+
+        if isinstance(lst,EnumType):
+            name = lst.__name__.split(".")[-1]
+            pack = lst.__module__
+            doc = lst.__doc__.split("\n")[0]
+            name_cols = ['Classname','Package','Docstring']
+            ordr_cols = [name,pack,doc]
+
+        for i,n in enumerate(ordr_cols):
+            msg_mark = 0
+            line = f" {name_cols[i]:<10} : {n}"
+            line = self.prefix+line
+            # print(line)
+            out.append(line)
+
+        return out
+
+    def get_type_function(self,tocheck:any)->callable:
+        library = {list:self.display_list,
+                   dict:self.display_dict,
+                   int:self.pass_through,
+                   str:self.pass_through,
+                   float:self.display_float,
+                   any:self.pass_through,
+                   object:self.display_object,
+                   ModuleType:self.display_object,
+                   'class':self.display_object,
+                   EnumType:self.display_object,
+                   }
+
+        t = type(tocheck)
+        out = None
+        if t in library:
+            # print("TYPE ::",t)
+            out = library[t]
+        else:
+            if inspect.isclass(tocheck):
+                out = library['class']
+
+        return out
+
+    def process(self, lm: LoggerMessage, *args) ->str:
+        # return self.compile(lm.data)
+        self.prefix=f"{' '*self.width}{self._colsep}"
+        self.total_len = args[0]
+        self.dataframe_end= args[2]
+        self.empty_offset = args[3]
+        table = args[1]
+
+        out = "\n"
+        if lm.data is None:
+            out = " "
+
+        if lm.data is not None:
+            bl = f"DATA BLOCK for {lm.logger_name}"
+            block_title = f"{bl}"
+            if table:
+                tb_line = f"{'—'*self.width}"
+                out += f"{tb_line}{self._colsep}{self._fill_data_framend(tb_line,offset=False,offlen=-1)} \n"
+                # out += f"{'-'*(total_len-len(self.prefix))}\n"
+            out += f"{self.prefix} {block_title}{self._fill_data_framend(block_title,offlen=-21)} \n"
+            tt = self.get_type_function(lm.data)
+            if tt is not None:
+                for  c in  tt(lm.data):
+                    comp =  self.compile(c)
+                    # print(len(comp))
+                    # print(c)
+                    end = self._fill_data_framend(c)
+                    out += comp+end+"\n"
+
+                if table:
+                    out += self.prefix+self._fill_data_framend()
+
+
+            # out += f"\n{'-'*self.width}{self._colsep}{'-'*+150}"
+
+            return out
 
 @dataclass(init=False)
 class LinenoColumn(BaseColumn):
     def __init__(self,sp:ColumnSetup):
         super().__init__(sp=sp)
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         frame = lm.frame
         linenr = frame.f_lineno
         mr =self._setts[0].split('pad')
@@ -244,7 +378,7 @@ class LoglevelColumn(BaseColumn):
     def __init__(self,sp:ColumnSetup):
         super().__init__(sp=sp)
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         level:LoggerLevel = lm.log_level
         lib = {'name':level.name,
                'value':level.value
@@ -256,7 +390,7 @@ class MsgColumn(BaseColumn):
     def __init__(self,sp:ColumnSetup):
         super().__init__(sp=sp)
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         return self.compile(lm.msg)
 
 @dataclass(init=False)
@@ -314,7 +448,7 @@ class PackageColumn(BaseColumn):
 
         return out
 
-    def process(self,lm:LoggerMessage)->str:
+    def process(self, lm: LoggerMessage, *args) ->str:
         library: dict = {x: "" for x in self._setts[0]}
         library = self.package(lm.frame,library)
         if 'f' in library:

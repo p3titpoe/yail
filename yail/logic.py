@@ -5,7 +5,6 @@ class LoggerLevel(Enum):
     """
         Lists all the default logger types
     """
-    INHERIT = 0
     DEBUG =10
     INFO = 20
     WARNING = 30

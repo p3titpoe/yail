@@ -10,6 +10,11 @@ class HandlerType(Enum):
     SOCKET = 30
     WEB = 40
 
+    @classmethod
+    def by_name(cls, name: str):
+        att = getattr(cls, name)
+        return att
+
 
 @dataclass(init=False)
 class BaseHandler:

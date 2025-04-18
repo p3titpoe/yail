@@ -3,7 +3,7 @@ from datetime import datetime
 from dataclasses import dataclass,field
 from yail.logic import *
 # from yail.formatter.formatter import
-from yail.handlers.console import ConsoleHandler,HandlerType
+from yail.handlers.consolehandler import ConsoleHandler,HandlerType
 
 
 

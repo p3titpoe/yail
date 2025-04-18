@@ -1,28 +1,60 @@
+from yail.formatter.columns import ColumnSetup
+
 ##############################################################################
-#  Template for customizing
-# - Tokens are separated by semi-colon (:)
-# - settings are separated by pipes (|)
+#  Default Template for customizing
+#  Steps to define your own
+# - Define the default Columns /refer to Colums in the manual for help
+# - Define
 # - tags and their options are separated by spaces ( )
 #
 ##############################################################################
-import os
+##########################
+#Default Column Setup
+##########################
 
-from yail.formatter.templates.base_console_template import columns_separator
+datecolumn = ColumnSetup(htype='date',align="l",width=0,setts=['iso'])
+datacolumn = ColumnSetup(htype='data',align="l",width=0,setts=[])
+linenocolumn = ColumnSetup(htype='lineno',align="l",width=12,setts=['pad4'])
+loggercolumn = ColumnSetup(htype='logger',align="l",width=12,setts=['name'])
+loglevelcolumn = ColumnSetup(htype='loglevel',align="l",width=8,setts=['name'])
+msgcolumn = ColumnSetup(htype='msg',align="l",width=60,setts=[])
+packagecolumn = ColumnSetup(htype='package',align="l",width=32,setts=['mcf',None])
 
-path_to_file = os.path.abspath(__file__)
-# print(path_to_file)
-msg_length:int = 180
-logger_name_length:int = 8
+##########################
+#Color Setup
+##########################
+
+
+
+
+##########################
+#MESSAGE FORMATS
+##########################
 
 columns_separator = "::"
 
-default_long: str = f"date iso:logger name|8 l:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-default_short: str = f"date today|26:logger name|20:loglevel name|10"
+#You can define custom columns if you need more control
+today_date = ColumnSetup(htype='date',align="c", filler=":",width=19,setts=['today'])
 
-log_debug: str = f"date iso:logger name|8 l:loglevel name|8:lineno pad4|13 c:package mcf argsval|38 l:msg|{msg_length}:data"
-# log_info: str = f"date iso:logger name|8 c:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-log_info: str = f"date iso:logger name|8 l:loglevel name|8:package cf argsval|33 l:msg|{msg_length}"
-log_warning: str = f"date iso:logger name|8 l:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-log_error: str = f"date iso:logger name|8 l:loglevel name|8:lineno pad4|13 c:package mcf args|33 l:msg|{msg_length}"
-log_critical: str = f"date iso:logger name|8 l:loglevel name|8:lineno pad4|13 c:package mcf argsval|33 l:msg|{msg_length}"
-log_fatal: str = f"date iso:logger name|8 l:loglevel name|8:lineno pad4|13 c:package mcf argsval|33 l:msg|{msg_length}"
+default_long = [datecolumn, loggercolumn, loglevelcolumn, packagecolumn, msgcolumn]
+default_short = [today_date, loggercolumn, loglevelcolumn, msgcolumn]
+
+#DEBUG MSG
+debug_package = ColumnSetup(htype='package',align="l",width=32,setts=['mcf','argsval'])
+log_debug = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
+
+#INFO MSG
+log_info = [today_date, loggercolumn, loglevelcolumn, packagecolumn, msgcolumn]
+
+#WARNING MSG
+log_warning = [today_date, loggercolumn, loglevelcolumn, packagecolumn,msgcolumn,datacolumn]
+
+#ERROR MSG
+log_error = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
+
+#CRITICAL MSG
+critical_package = ColumnSetup(htype='package',align="l",width=42,setts=['pmcf','argsval'])
+log_critical = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, critical_package,msgcolumn,datacolumn]
+
+
+

@@ -84,13 +84,13 @@ class BaseFormatter:
     _conf: Templater = None
     _table:dict = field(default_factory=dict)
     _table_row_len = 170
-    _table_view:bool = False
+    _table_view:bool = True
     _table_row_prepend:bool = True
     _col_lens:dict = field(default_factory=dict)
     _total_msglen_to_msgcolumn:int = 0
     _total_msglen:int = 0
     _data_frame_end:int  = 0
-    _data_view:bool = True
+    _data_view:bool = False
 
 
     def __post_init__(self):

@@ -24,7 +24,7 @@ loglevelcolumn = ColumnSetup(htype='loglevel',align="l",width=10,setts=['name'])
 msgcolumn = ColumnSetup(htype='msg',align="l",width=60,setts=[])
 packagecolumn = ColumnSetup(htype='package',align="l",width=32,setts=['mcf',None])
 
-columns_separator = " — "
+columns_separator = "| "
 
 ##########################
 #MESSAGE FORMATS

@@ -356,7 +356,7 @@ class LoggerLogParameters:
 
 
 @dataclass
-class LoggerCacheline:
+class LoggerStack:
     """
         The data stored by MasterLoggerCache
     """
@@ -423,7 +423,7 @@ class MasterLoggerCache(LoggerCache):
 
         """
         reg_id = None
-        cacheline = LoggerCacheline(logger,public)
+        cacheline = LoggerStack(logger, public)
         if len(self.booked) + 1 <= self.max_len:
             reg_id = self.free[0]
             self._registry[reg_id] = cacheline
@@ -436,7 +436,7 @@ class MasterLoggerCache(LoggerCache):
         self._logger_by_names = {v.name:k for k,v in self.registry.items() if v is not None}
 
 
-    def cache_entry(self, reg_id:int)->LoggerCacheline:
+    def cache_entry(self, reg_id:int)->LoggerStack:
         """
             Returns a cache entry by id.
 
@@ -452,7 +452,7 @@ class MasterLoggerCache(LoggerCache):
         """
         return self.registry[reg_id]
 
-    def cache_entry_by_name(self,name:str)->LoggerCacheline:
+    def cache_entry_by_name(self,name:str)->LoggerStack:
         """
             Returns a cache entry by name.
 

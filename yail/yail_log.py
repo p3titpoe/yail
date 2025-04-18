@@ -164,8 +164,6 @@ class BaseLogger:
         frame = inspect.currentframe().f_back
         self.__base_log_functions(loglevel,frame,info,loggger_msg_data, external_frame)
 
-
-
     def debug(self, info:str, loggger_msg_data:any = None, external_frame:any = None) -> None:
         """
             Convenience function to call __base_log_functions with predefinded log level.
@@ -286,7 +284,7 @@ class LoggerManager:
         self._root_cache = MasterLoggerCache(200,self)
 
     def _getlogger_for_sys(self, name:str)->BaseLogger:
-        cl: LoggerCacheline = self.rootcache.cache_entry_by_name(name)
+        cl: LoggerStack = self.rootcache.cache_entry_by_name(name)
         return cl.logger
 
     def _logger_actions(self,loggerlist:list,action:str)->None:
@@ -521,7 +519,7 @@ class LoggerManager:
             RETURNS:
                 Baselogger
         """
-        cl:LoggerCacheline = self.rootcache.cache_entry_by_name(name)
+        cl:LoggerStack = self.rootcache.cache_entry_by_name(name)
         if not cl.public:
             raise PermissionError(f"{cl.name} is not Public!")
         else:

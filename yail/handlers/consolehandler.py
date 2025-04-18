@@ -1,8 +1,8 @@
 from dataclasses import dataclass,field
-from yail.logic import LoggerLevel
+# from yail.logic import LoggerLevel
 # from yail.formatter.logic import Formatter
-from yail.handlers.logic import BaseHandler,HandlerType
 from yail.logic import LoggerMessage
+from .logic import BaseHandler,HandlerType
 
 
 @dataclass

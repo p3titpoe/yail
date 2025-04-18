@@ -2,7 +2,21 @@ import random
 import string
 import yail
 from yail import LoggerLevel
+from yail.handlers import ConsoleHandler
 from threading import Thread
+
+print(yail.handlers.console.muted_channels,1)
+console_h:ConsoleHandler = yail.handlers.console
+# console_h.channels['error'].mute()
+print(console_h.muted_channels,2)
+console_h.solo_channels(LoggerLevel.INFO)
+print(console_h.muted_channels,3)
+console_h.solo_channels(LoggerLevel.ERROR)
+print(console_h.muted_channels,4)
+console_h.solo_channels(LoggerLevel.ERROR)
+print(console_h.muted_channels,5)
+console_h.solo_channels()
+print(console_h.muted_channels,6)
 
 
 def infoprint():
@@ -45,7 +59,7 @@ class logTest:
                 params.append(dd)
             logfunc(*params)
 
-ltc = logTest(6,400)
+# ltc = logTest(6,400)
 
 
 

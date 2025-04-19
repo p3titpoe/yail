@@ -2,7 +2,7 @@ from .consolehandler import ConsoleHandler
 from .filehandler import FileHandler
 from .sockethandler import SocketHandler
 from .webhandler import WebHandler
-from .logic import BaseHandler,Enum, HandlerType
+from .logic import BaseHandler,Enum, HandlerType,HandlerChannelMixer
 
 class HandlerObject(Enum):
     CONSOLE = ConsoleHandler
@@ -15,33 +15,58 @@ class HandlerObject(Enum):
         att = getattr(cls, name)
         return att
 
+class HandlerRouting:
+    console:ConsoleHandler = None
+    file:dict[str:FileHandler] = None
+    socket:SocketHandler = None
+    web:WebHandler = None
+
+class MixerRouting:
+    console:HandlerChannelMixer = None
+    file:dict[str:HandlerChannelMixer] = None
+    socket:HandlerChannelMixer = None
+    web:HandlerChannelMixer = None
+
 class HandlerManager:
 
-    _library = {HandlerObject.CONSOLE.name:None,
-               HandlerObject.FILE.name:{},
-               HandlerObject.SOCKET.name:None,
-               HandlerObject.WEB.name:None
+    _library:dict[str:BaseHandler] = {HandlerObject.CONSOLE.name.lower():None,
+               HandlerObject.FILE.name.lower():{},
+               HandlerObject.SOCKET.name.lower():None,
+               HandlerObject.WEB.name.lower():None
             }
+    _handler:HandlerRouting = None
+    _mixer:MixerRouting = None
 
     def __init__(self):
-        self._library[HandlerObject.CONSOLE.name] = self.create_handler(HandlerObject.CONSOLE)
+        self._library[HandlerObject.CONSOLE.name.lower()] = self.create_handler(HandlerObject.CONSOLE)
         self._file_handlers ={}
+        self._handler = HandlerRouting()
+        self._mixer = MixerRouting()
+        self.__post_init__()
+
+    def __post_init__(self):
+        pass
+        # for n in self._library.keys():
+        #     setattr(self._handler,n,self._library[n])
+        #     setattr(self._mixer,n,self._library[n].mixer)
 
     @property
-    def console(self)->ConsoleHandler:
-        return self._library[HandlerObject.CONSOLE.name]
+    def handlers(self)->dict[str:BaseHandler]:
+        return self._library
 
     @property
-    def file(self)->dict:
-        return self._library[HandlerObject.FILE.name]
+    def handler(self)->HandlerRouting:
+        for n in self._library.keys():
+            print(n)
+            setattr(self._handler,n,self._library[n])
+        return self._handler
 
     @property
-    def socket(self)->SocketHandler:
-        return self._library[HandlerObject.SOCKET.name]
-
-    @property
-    def web(self)->WebHandler:
-        return self._library[HandlerObject.WEB.name]
+    def mixer(self)->MixerRouting:
+        for k,v in self._library.items():
+            if v is not None:
+                setattr(self._mixer,k,self._library[k].mixer)
+        return self._mixer
 
     def create_handler(self,what:HandlerObject, filehandler_name:str=None)->BaseHandler:
         out = None
@@ -49,13 +74,13 @@ class HandlerManager:
             exit("FileHandler needs a name")
         elif what == HandlerObject.FILE and filehandler_name is not None:
             if filehandler_name not in self.file.keys():
-                fh = what.value(HandlerType.by_name(what.name))
-                self._library[what.name][filehandler_name] = fh
+                fh = what.value(HandlerType.by_name(what.name.lower()))
+                self._library[what.name.lower()][filehandler_name] = fh
                 out = fh
         else:
-            if self._library[what.name] is None:
+            if self._library[what.name.lower()] is None:
                 hdler = what.value(HandlerType.by_name(what.name))
-                self._library[what.name] = hdler
+                self._library[what.name.lower()] = hdler
                 out = hdler
 
             else:

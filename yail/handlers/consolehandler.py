@@ -13,9 +13,13 @@ class ConsoleHandler(BaseHandler):
         _colors:bool = False
         _color_engine:any = None
 
+        print(self.muted_channels,"CONSOLE")
 
-    def process_loggermsg(self,msg_obj:LoggerMessage) ->None:
+    def process(self,msg_obj:LoggerMessage) ->None:
         kk = self._formatter.compile(msg_obj)
-        print(kk)
+
+        if self.can_pass(lvl=msg_obj.log_level):
+            # print(self.can_pass(lvl=msg_obj.log_level))
+            print(kk)
         pass
 

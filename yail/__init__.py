@@ -1,5 +1,5 @@
 
-from .yail_log import LoggerCache,LoggerManager,BaseLogger,LoggerLevel,LoggerStack,LoggerMessage
+from .loggers import LoggerManager,BaseLogger,LoggerLevel,LoggerStack,LoggerMessage
 from inspect import currentframe
 from .handlers import HandlerObject, HandlerManager
 
@@ -67,7 +67,7 @@ def resume_processing(name:str|None)->None:
 ##############################################################
 
 
-def rootcache()->LoggerCache:
+def rootcache()->any:
     return yail._root_cache
 
 def rootlogger()->BaseLogger:

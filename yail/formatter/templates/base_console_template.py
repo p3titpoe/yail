@@ -51,7 +51,7 @@ log_error = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_packa
 
 #CRITICAL MSG
 critical_package = ColumnSetup(htype='package',align="l",width=42,setts=['pmcf','argsval'])
-log_critical = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, critical_package,msgcolumn,datacolumn]
+log_critical = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
 
 
 

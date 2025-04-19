@@ -2,7 +2,9 @@ import inspect
 from dataclasses import dataclass,field
 from typing import Callable
 from enum import Enum
-from yail.signaling.registry import Registry,RegistryEntry
+from venv import create
+
+from yail.signaling.registry import RegistryController,RegistryEntry
 
 
 class InternalSystemEvent(Enum):
@@ -46,13 +48,27 @@ class SignalCache:
         del_event(eventname:str)
         subscribe(eventname:str)
     """
-    _signals:Registry = field(init=False,default_factory=Registry)
-    _subscribers:Registry = field(init=False,default_factory=Registry)
-    _lnks:dict[SignalEvent:list] = field(init=False,default_factory=dict)
+    _signals:RegistryController = field(init=False,default_factory=RegistryController)
+    _subscribers:RegistryController = field(init=False,default_factory=RegistryController)
+    _lnks:dict[SignalEvent:list[str]] = field(init=False,default_factory=dict)
 
 
     def __post_init__(self):
+        self._signals.parent = self
+        self._subscribers.parent = self
         pass
+
+    def __cleanup(self,who)->None:
+        if isinstance(who,SignalEvent):
+            for k in self.subscriber.registry_by_name:
+                sub:SignalSubscriber = self.subscriber.by_name(k)
+                if sub.subscription == who:
+                    sub._subscription = None
+            delattr(self.links[who.name])
+
+        if isinstance(who,SignalSubscriber):
+            sig:SignalEvent = who.subscription
+            self.links[sig.name].remove(who.name)
 
     def _emit_signal(self,funclist:list[Callable],**kwargs):
         for func in funclist:
@@ -60,48 +76,43 @@ class SignalCache:
 
 
     @property
-    def signals(self)->Registry:
+    def signal(self)->RegistryController:
         return self._signals
 
     @property
-    def subscribers(self)->Registry:
+    def subscriber(self)->RegistryController:
         return self._subscribers
 
     @property
     def links(self)->dict[SignalEvent:list[Callable]]:
         return self._lnks
 
-    def signals_by_name(self,name:str)->SignalEvent:
-        return self.signals.entry_by_name(name=name)
+    def unsubscribe(self,subscriber_name:str)->None:
+        if subscriber_name in self.subscriber.registry_by_name:
+            sub:SignalSubscriber = self.subscriber.by_name(subscriber_name)
+            if sub.subscription.name in self.links:
+                self.links[sub.subscription.name].remove(subscriber_name)
+            self.subscriber.rm(subscriber_name)
 
-    def subscribe(self,subscriber_name:str,signal_name:str,):
-        pass
+    def subscribe(self,subscriber_name:str,signal_name:str,receiver_func:Callable)->None:
+        sig = self.signal.by_name(signal_name)
+        new_subscriber = SignalSubscriber(subscriber_name,receiver_func,sig)
+        self.subscriber.add(new_subscriber)
+        print(self.subscriber)
+        self.links[sig.name].append(new_subscriber.lnk)
 
     def create_signal(self, signalname:str,signature:dict[str:type],docs:str="Say somtehing")->SignalEvent:
         new_signal = SignalEvent(signalname,signature,docs)
-        if signalname in self.signals.by_name:
+        if signalname in self.signal.registry_by_name:
             error = f"A signal named {new_signal.name} already exists"
             raise ValueError(error)
 
         else:
-            self.add_signal(new_signal)
+            self.signal.add(new_signal)
+            self.links[new_signal.name] = []
             return new_signal
 
-    def add_signal(self,signal:SignalEvent)->int:
-        regid = -1
-        if signal.name not in self.signals.by_name:
-            regid = self.signals.register(signal)
-            return regid
-        else:
-            error = f"A signal named {signal.name} already exists"
-            raise ValueError(error)
 
-    def rm_signal(self,signalname:str)->int:
-        regid = -1
-        if signalname in self.signals.by_name:
-            regid= self.signals.by_name[signalname]
-            self.signals.unregister(regid)
-        return regid
 
 def hh(data:int,name:str)->list:
     return [data,name]
@@ -113,15 +124,19 @@ def ggh(data:int,name:str)->int:
 cache = SignalCache()
 kk = SignalEvent('NEwSig',{'data': int,'name': str})
 print(kk)
-cache.add_signal(kk)
+cache.signal.add(kk)
 gg = cache.create_signal('NmwSig',{'data': int,'name': str})
-cache.create_signal('Ng',{'data': int,'name': str})
-print(cache.signals.booked)
-cache.rm_signal('NmwSig')
-print(cache.signals.booked,cache.signals.registry)
-cache.add_signal(gg)
-print(cache.signals.booked,cache.signals.registry)
+cache.subscribe('kkkkk','NmwSig',ggh)
+ss = SignalSubscriber('name',hh,gg)
+cache.subscriber.add(ss)
+print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
 
+cache.create_signal('Ng',{'data': int,'name': str})
+print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
+cache.signal.rm('NmwSig')
+print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
+cache.signal.add(gg)
+print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
+print(cache)
 # cache.add_signal(gg)
-# ss = SignalSubscriber('subs',ggh,kk)
 # print(ss)

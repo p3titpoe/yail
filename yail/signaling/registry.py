@@ -37,6 +37,7 @@ class Registry:
 
 
     """
+    _parent:object = None
     _registry: dict[int:RegistryEntry] = field(init=False, default_factory=dict)
     _booked: list[int] = field(init=False, default_factory=list)
     _free: list[int] = field(init=False, default_factory=list)
@@ -135,6 +136,7 @@ class Registry:
                 fatalities.append(v)
 
         self._registry = new_cache
+        self._size = to_size
         self.post_cache_manips(data=fatalities)
 
     def entry_by_id(self,regid:int)->RegistryEntry:
@@ -183,6 +185,8 @@ class Registry:
 
 
         """
+        if self._parent is not None:
+            self._parent.update_size()
 
     def post_register(self,regid:int)->any:
         """
@@ -194,9 +198,19 @@ class Registry:
                 Should be defined by kids
 
         """
+
 @dataclass
 class RegistryController:
-    _reg:Registry
+    size:int = 70
+    parent:any = None
+
+    def __post_init__(self):
+        self._reg = Registry(_size=self.size,_parent=self)
+        self.size = self.registry.size
+
+    def __to_parent(self,data)->None:
+        if self.parent is not None:
+            self.parent.__cleanup(data)
 
     @property
     def booked(self)->list[int]:
@@ -228,6 +242,7 @@ class RegistryController:
         if entry in self.registry_by_name:
             regid= self.registry_by_name[entry]
             self.registry.unregister(regid)
+
         return regid
 
     def by_name(self,entryname:str)->RegistryEntry:
@@ -235,6 +250,9 @@ class RegistryController:
 
     def by_regid(self,regid:int)->RegistryEntry:
         return self.registry.entry_by_id(regid)
+
+    def update_size(self)->None:
+        self.size = self.registry.size
 
 
 

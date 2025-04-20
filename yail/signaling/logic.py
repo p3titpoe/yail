@@ -2,9 +2,7 @@ import inspect
 from dataclasses import dataclass,field
 from typing import Callable
 from enum import Enum
-from venv import create
-
-from yail.signaling.registry import RegistryController,RegistryEntry
+from registry import RegistryController,RegistryEntry
 
 
 class InternalSystemEvent(Enum):
@@ -30,7 +28,7 @@ class SignalSubscriber(RegistryEntry):
         jj = {k:v for k,v in pp.annotations.items() if k != 'return'}
         if self._subscription.signature != jj:
             error = f"Signatures do not match.\n Need: {self._subscription.signature}"
-            raise AttributeError(error)
+            raise AssertionError(error)
 
     @property
     def lnk(self)->Callable:
@@ -39,6 +37,10 @@ class SignalSubscriber(RegistryEntry):
     @property
     def subscription(self)->SignalEvent:
         return
+
+    def new_subscription(self,sig:SignalEvent)->None:
+        self._subscription = sig
+
 
 @dataclass
 class SignalCache:
@@ -56,23 +58,27 @@ class SignalCache:
     def __post_init__(self):
         self._signals.parent = self
         self._subscribers.parent = self
-        pass
 
-    def __cleanup(self,who)->None:
+    def _on_delete(self,who)->None:
         if isinstance(who,SignalEvent):
-            for k in self.subscriber.registry_by_name:
-                sub:SignalSubscriber = self.subscriber.by_name(k)
-                if sub.subscription == who:
-                    sub._subscription = None
-            delattr(self.links[who.name])
+
+            for k in self.links[who.name]:
+                regid = self.subscriber.registry_by_name[k]
+                self.subscriber.registry.unregister(regid)
+            del self.links[who.name]
 
         if isinstance(who,SignalSubscriber):
-            sig:SignalEvent = who.subscription
+            sig:SignalEvent = who._subscription
             self.links[sig.name].remove(who.name)
 
-    def _emit_signal(self,funclist:list[Callable],**kwargs):
-        for func in funclist:
-            func(**kwargs)
+    def _on_add(self,who)->None:
+        if isinstance(who, SignalEvent):
+            self.links[who.name] = []
+
+        if isinstance(who, SignalSubscriber):
+            sig: SignalEvent = who._subscription
+            self.links[sig.name].append(who.name)
+
 
 
     @property
@@ -87,19 +93,16 @@ class SignalCache:
     def links(self)->dict[SignalEvent:list[Callable]]:
         return self._lnks
 
-    def unsubscribe(self,subscriber_name:str)->None:
-        if subscriber_name in self.subscriber.registry_by_name:
-            sub:SignalSubscriber = self.subscriber.by_name(subscriber_name)
-            if sub.subscription.name in self.links:
-                self.links[sub.subscription.name].remove(subscriber_name)
-            self.subscriber.rm(subscriber_name)
-
-    def subscribe(self,subscriber_name:str,signal_name:str,receiver_func:Callable)->None:
+    def subscribe(self,subscriber_name:str,signal_name:str,receiver_func:Callable)->SignalSubscriber:
         sig = self.signal.by_name(signal_name)
         new_subscriber = SignalSubscriber(subscriber_name,receiver_func,sig)
         self.subscriber.add(new_subscriber)
-        print(self.subscriber)
-        self.links[sig.name].append(new_subscriber.lnk)
+        return new_subscriber
+
+    def unsubscribe(self,subscriber_name:str)->None:
+        if subscriber_name in self.subscriber.registry_by_name:
+            sub:SignalSubscriber = self.subscriber.by_name(subscriber_name)
+            self.subscriber.rm(subscriber_name)
 
     def create_signal(self, signalname:str,signature:dict[str:type],docs:str="Say somtehing")->SignalEvent:
         new_signal = SignalEvent(signalname,signature,docs)
@@ -109,34 +112,22 @@ class SignalCache:
 
         else:
             self.signal.add(new_signal)
-            self.links[new_signal.name] = []
+            # self.links[new_signal.name] = []
             return new_signal
 
+    def emit_signal(self,signalname:str,**kwargs)->None:
+        sig:SignalEvent = self.signal.by_name(signalname)
+        out = {}
+        if len(kwargs) == len(sig.signature):
+            for k,v in kwargs.items():
+                if k not in sig.signature.keys():
+                    txt=f"{k} not in args! Need {sig.signature} "
+                    raise ValueError(txt)
+                if not isinstance(v,sig.signature[k]):
+                    txt=f"{k} has the wrong type! Need {sig.signature} "
+                    raise ValueError(txt)
 
 
-def hh(data:int,name:str)->list:
-    return [data,name]
-
-def ggh(data:int,name:str)->int:
-    print('Received signal')
-    return data*3
-
-cache = SignalCache()
-kk = SignalEvent('NEwSig',{'data': int,'name': str})
-print(kk)
-cache.signal.add(kk)
-gg = cache.create_signal('NmwSig',{'data': int,'name': str})
-cache.subscribe('kkkkk','NmwSig',ggh)
-ss = SignalSubscriber('name',hh,gg)
-cache.subscriber.add(ss)
-print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
-
-cache.create_signal('Ng',{'data': int,'name': str})
-print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
-cache.signal.rm('NmwSig')
-print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
-cache.signal.add(gg)
-print("Subscriber ",cache.subscriber.booked," Signals ",cache.signal.booked)
-print(cache)
-# cache.add_signal(gg)
-# print(ss)
+            for subname in self.links[sig.name]:
+                sub:SignalSubscriber = self.subscriber.by_name(subname)
+                sub.lnk(**kwargs)

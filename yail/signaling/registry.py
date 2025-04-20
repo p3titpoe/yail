@@ -208,9 +208,13 @@ class RegistryController:
         self._reg = Registry(_size=self.size,_parent=self)
         self.size = self.registry.size
 
-    def __to_parent(self,data)->None:
+    def __to_parent(self,what:str,data)->None:
         if self.parent is not None:
-            self.parent.__cleanup(data)
+            mmap ={'rm':self.parent._on_delete,
+                   'add': self.parent._on_add,
+                   }
+            func = mmap[what]
+            func(data)
 
     @property
     def booked(self)->list[int]:
@@ -232,17 +236,19 @@ class RegistryController:
         regid = -1
         if entry.name not in self.registry_by_name:
             regid = self.registry.register(entry)
+            self.__to_parent('add',self.by_regid(regid))
             return regid
         else:
             error = f"An entry named {entry.name} already exists"
             raise ValueError(error)
 
+
     def rm(self, entry:str)->int:
         regid = -1
         if entry in self.registry_by_name:
             regid= self.registry_by_name[entry]
+            self.__to_parent('rm',self.by_regid(regid))
             self.registry.unregister(regid)
-
         return regid
 
     def by_name(self,entryname:str)->RegistryEntry:

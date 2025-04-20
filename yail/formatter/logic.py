@@ -16,7 +16,7 @@ class FormatType(Enum):
         return att
 
 
-@dataclass
+@dataclass(repr=False)
 class BaseFormatter:
     """
         Formats the log string
@@ -98,6 +98,11 @@ class BaseFormatter:
         self._htype = FormatType.by_name(self.ctype.name)
         self._conf = Templater(_template_path=self._htype.value)
         pass
+
+    def __repr__(self):
+        txt =self.__class__.__name__
+        txt += f"(table_view={self._table_view}, data_view={self._data_view})"
+        return txt
 
     @property
     def conf(self):

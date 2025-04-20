@@ -1,7 +1,5 @@
 from enum import Enum
 from dataclasses import dataclass,field
-
-import yail.handlers
 from yail.logic import LoggerLevel,LoggerMessage
 from yail.formatter import FormatterType,BaseFormatter
 
@@ -82,7 +80,7 @@ class ChannelRouting:
     critical:HandlerChannel = None
 
 
-@dataclass
+@dataclass(repr=False)
 class HandlerChannelMixer:
     _channels:dict[str:HandlerChannel] = field(init=False,default_factory=dict)
     _channels_convenience:ChannelRouting = None
@@ -97,6 +95,13 @@ class HandlerChannelMixer:
         self._muted_channels = []
         for k,v in self._channels.items():
             setattr(self._channels_convenience,k,v)
+
+    def __repr__(self):
+        txt = self.__class__.__name__
+        ch = [f"{x}" for x in self._channels]
+        txt +=f"(channels:[{"|".join(ch)}]"
+        txt +=f", muted channels:{self._muted_channels}"
+        return txt
 
     def _mk_worklist(self,ch: str | LoggerLevel | list[LoggerLevel] | None)->list[LoggerLevel]:
         wrk_lst = [ch]
@@ -132,7 +137,7 @@ class HandlerChannelMixer:
         elif self._is_soloed:
             # print(wrk_lst, 0,2)
             tmp = []
-            if wrk_lst[0] is None:
+            if len(wrk_lst)==0 or wrk_lst[0] is None:
                 self._muted_channels = self._snapshot
                 self._snapshot = []
                 self._is_soloed = False
@@ -213,8 +218,8 @@ class BaseHandler:
         self._muted_loggers = []
         self.__post_init__()
 
-    def __post_init__(self):
 
+    def __post_init__(self):
         pass
 
     @property
@@ -237,13 +242,14 @@ class BaseHandler:
     def fmt(self)->BaseFormatter:
         return self._formatter
 
+
     def can_pass(self,lvl:LoggerLevel)->bool:
         out = True
         if lvl in self.mixer.muted_channels:
             out = False
         return out
 
-    def process_loggermsg(self, msg_obj:LoggerMessage)->None:
+    def process(self, msg_obj:LoggerMessage)->None:
         """
         Has to be implemented by kids
         """

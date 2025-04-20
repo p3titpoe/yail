@@ -40,7 +40,7 @@ For example, active loggers are NOT shareable per default, but they can be set t
 import yail as logger 
 from yail import LoggerLevel
 
-#Define the loggers
+#Define the stacks
 warn_logger = logger.get_logger('Warn')
 warn_logger.set_loglevel(LoggerLevel.WARNING)
 err_logger = logger.get_logger('Error')

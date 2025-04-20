@@ -1,5 +1,6 @@
 from dataclasses import dataclass,field
 from yail.logic import LoggerLevel, Registry
+from yail.signaling import emit
 
 @dataclass
 class LoggerMessage:
@@ -17,18 +18,21 @@ class LoggerStack:
     """
         The data stored by MasterLoggerCache
     """
-    logger: object = None
+    name: str
+    logger: object
     public:bool = False
-    name: str = ""
     log_level: LoggerLevel = LoggerLevel.DEBUG
     handlers:list = None
 
     def __post_init__(self):
-        self.handlers = []
+        self.log_level=self.logger.log_level
 
-    def process(self,msg:LoggerMessage):
+    def process(self,msg_obj:LoggerMessage):
         for h in self.handlers:
-            h.process(msg)
+            emit(h,msg_obj=msg_obj)
+            # h.process(msg_obj)
+
+
 
 
 @dataclass

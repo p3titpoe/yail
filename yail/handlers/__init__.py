@@ -3,10 +3,12 @@ from .filehandler import FileHandler
 from .sockethandler import SocketHandler
 from .webhandler import WebHandler
 from .logic import BaseHandler,Enum, HandlerType,HandlerChannelMixer
+from pathlib import Path
+import yail.signaling as sig
 
 class HandlerObject(Enum):
     CONSOLE = ConsoleHandler
-    FILE = BaseHandler
+    FILE = FileHandler
     SOCKET = BaseHandler
     WEB = BaseHandler
 
@@ -30,7 +32,7 @@ class MixerRouting:
 class HandlerManager:
 
     _library:dict[str:BaseHandler] = {HandlerObject.CONSOLE.name.lower():None,
-               HandlerObject.FILE.name.lower():{},
+               HandlerObject.FILE.name.lower():None,
                HandlerObject.SOCKET.name.lower():None,
                HandlerObject.WEB.name.lower():None
             }
@@ -39,16 +41,13 @@ class HandlerManager:
 
     def __init__(self):
         self._library[HandlerObject.CONSOLE.name.lower()] = self.create_handler(HandlerObject.CONSOLE)
-        self._file_handlers ={}
         self._handler = HandlerRouting()
         self._mixer = MixerRouting()
         self.__post_init__()
 
     def __post_init__(self):
-        pass
-        # for n in self._library.keys():
-        #     setattr(self._handler,n,self._library[n])
-        #     setattr(self._mixer,n,self._library[n].mixer)
+        for n in self._library.keys():
+            setattr(self._handler,n,self._library[n])
 
     @property
     def handlers(self)->dict[str:BaseHandler]:
@@ -56,26 +55,34 @@ class HandlerManager:
 
     @property
     def handler(self)->HandlerRouting:
-        for n in self._library.keys():
-            print(n)
-            setattr(self._handler,n,self._library[n])
+
         return self._handler
 
     @property
     def mixer(self)->MixerRouting:
         for k,v in self._library.items():
-            if v is not None:
+            itm = v
+            if itm is not None and k !="file":
                 setattr(self._mixer,k,self._library[k].mixer)
+
         return self._mixer
 
-    def create_handler(self,what:HandlerObject, filehandler_name:str=None)->BaseHandler:
+    def create_handler(self,what:HandlerObject, fh_path:str=None)->BaseHandler:
         out = None
-        if what == HandlerObject.FILE and filehandler_name is None:
-            exit("FileHandler needs a name")
-        elif what == HandlerObject.FILE and filehandler_name is not None:
-            if filehandler_name not in self.file.keys():
-                fh = what.value(HandlerType.by_name(what.name.lower()))
-                self._library[what.name.lower()][filehandler_name] = fh
+        if what == HandlerObject.FILE:
+            # print("FFFF::: create",self._library['file'])
+
+            if fh_path is None:
+                error = f"Filehandler needs a path! "
+                raise ValueError(error)
+            else:
+                pth = Path(fh_path)
+                if not pth.exists():
+                    error = f"{fh_path} is not a path! "
+                    raise ValueError(error)
+
+                fh = what.value(HandlerType.by_name(what.name))
+                self._library[what.name.lower()] = fh
                 out = fh
         else:
             if self._library[what.name.lower()] is None:
@@ -84,7 +91,7 @@ class HandlerManager:
                 out = hdler
 
             else:
-                out = self._library[what.name]
+                out = self._library[what.name.lower()]
 
         return out
 

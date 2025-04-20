@@ -1,4 +1,4 @@
-from logic import SignalCache,SignalSubscriber,SignalEvent,Callable
+from .logic import SignalCache,SignalSubscriber,SignalEvent,Callable
 
 _sign_manager = SignalCache()
 

@@ -1,13 +1,13 @@
 from .logic import *
 from .logger import BaseLogger
-from yail.handlers import BaseHandler
+from yail.signaling import new_signal,subscribe
 
 
 
 @dataclass(init=False)
 class LoggerManager:
     """
-        Überclass managing the loggers
+        Überclass managing the stacks
 
         Needs MAsterLoggerCache as Registry (derived from Loggercache) and a Baslogger.
 
@@ -26,7 +26,7 @@ class LoggerManager:
     """
     _root_cache:MasterRegistry
     _root_logger: BaseLogger
-    _application_name:str = "yail"
+    _application_name:str = "stacks"
     _master_loglevel:LoggerLevel = LoggerLevel.INFO
     _solo_on: bool = False
     _solo_list:list = field(init=False,default_factory=list)
@@ -34,11 +34,11 @@ class LoggerManager:
     _muted_list: list = field(init=False,default_factory=list)
 
     def __init__(self):
-        name = '|-RooT-|'
+        name = 'ROOT'
         parent = None
         log_level = LoggerLevel.DEBUG
-        self._root_logger = BaseLogger(name,self,log_level)
         self._root_cache = MasterRegistry(200, self)
+        self._root_logger = self.make_new_logger(name=name,loglevel=log_level,public=False,handlers=['system-com'])
 
     def _getlogger_for_sys(self, name:str)->BaseLogger:
         cl: LoggerStack = self.rootcache.cache_entry_by_name(name)
@@ -126,7 +126,7 @@ class LoggerManager:
         """
             Solo's the logger.
 
-            When first invoked, it sip's(solo in place) the loggers,
+            When first invoked, it sip's(solo in place) the stacks,
             then adds every solo'd logger to the solo bus
 
             .. info::
@@ -283,7 +283,7 @@ class LoggerManager:
     def make_new_logger(self,name:str, loglevel:LoggerLevel=None,
                         public:bool=False,
                         block_level:bool=False,
-                        handlers:list[BaseHandler]=None)->BaseLogger:
+                        handlers:list[str]=None)->BaseLogger:
         """
             Returns a new logger with given name and stores it in the registry
 
@@ -296,14 +296,17 @@ class LoggerManager:
             RETURNS:
                 Baselogger
         """
-        stack = LoggerStack()
         loglvl = self._master_loglevel
         if isinstance(loglevel,LoggerLevel):
             loglvl = loglevel
         if handlers is None:
-            handlers = []
-        new_logger = BaseLogger(name,stack,loglvl,block_loglevel=block_level)
-        self._root_cache.register(new_logger)
+            handlers = ['Handler-Console']
+        #Create a private channel for the connection stack-logger
+        new_signal(f'{name}-stack-connection',{'msg_obj':LoggerMessage})
+        new_logger = BaseLogger(name=name,log_level=loglvl,block_loglevel=block_level)
+        new_stack = LoggerStack(name=name,logger=new_logger,public=False,handlers=handlers)
+        subscribe(f'logger-{name}',f'{name}-stack-connection',new_stack.process)
+        self._root_cache.register(new_stack)
         return new_logger
 
     def shutdown(self)->None:

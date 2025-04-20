@@ -2,7 +2,7 @@ import inspect
 from dataclasses import dataclass,field
 from typing import Callable
 from enum import Enum
-from registry import RegistryController,RegistryEntry
+from .registry import RegistryController,RegistryEntry
 
 
 class InternalSystemEvent(Enum):
@@ -27,7 +27,7 @@ class SignalSubscriber(RegistryEntry):
         pp = inspect.getfullargspec(self.lnk)
         jj = {k:v for k,v in pp.annotations.items() if k != 'return'}
         if self._subscription.signature != jj:
-            error = f"Signatures do not match.\n Need: {self._subscription.signature}"
+            error = f"Signature of '{str(self.lnk.__name__)}:{jj}' does not match! Need: {self._subscription.signature}"
             raise AssertionError(error)
 
     @property
@@ -41,6 +41,12 @@ class SignalSubscriber(RegistryEntry):
     def new_subscription(self,sig:SignalEvent)->None:
         self._subscription = sig
 
+
+cnt = 0
+def cunt(msg:str =""):
+    global cnt
+    cnt += 1
+    print(cnt, msg)
 
 @dataclass
 class SignalCache:
@@ -58,6 +64,7 @@ class SignalCache:
     def __post_init__(self):
         self._signals.parent = self
         self._subscribers.parent = self
+
 
     def _on_delete(self,who)->None:
         if isinstance(who,SignalEvent):
@@ -93,7 +100,9 @@ class SignalCache:
     def links(self)->dict[SignalEvent:list[Callable]]:
         return self._lnks
 
+
     def subscribe(self,subscriber_name:str,signal_name:str,receiver_func:Callable)->SignalSubscriber:
+        # cunt(f"subscribe: {subscriber_name}")
         sig = self.signal.by_name(signal_name)
         new_subscriber = SignalSubscriber(subscriber_name,receiver_func,sig)
         self.subscriber.add(new_subscriber)
@@ -116,16 +125,17 @@ class SignalCache:
             return new_signal
 
     def emit_signal(self,signalname:str,**kwargs)->None:
+        # print(self.signal.registry_by_name)
         sig:SignalEvent = self.signal.by_name(signalname)
         out = {}
         if len(kwargs) == len(sig.signature):
             for k,v in kwargs.items():
                 if k not in sig.signature.keys():
-                    txt=f"{k} not in args! Need {sig.signature} "
-                    raise ValueError(txt)
+                    error=f"{k} not in args! Need {sig.signature} "
+                    raise ValueError(error)
                 if not isinstance(v,sig.signature[k]):
-                    txt=f"{k} has the wrong type! Need {sig.signature} "
-                    raise ValueError(txt)
+                    error=f"{k} has the wrong type! Need {sig.signature} "
+                    raise ValueError(error)
 
 
             for subname in self.links[sig.name]:

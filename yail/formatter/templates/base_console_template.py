@@ -7,7 +7,7 @@
 ##############################################################################
 import os
 
-# from yail import critical
+# from stacks import critical
 from yail.formatter.columns import ColumnSetup
 
 __doc__="Base Console Template"

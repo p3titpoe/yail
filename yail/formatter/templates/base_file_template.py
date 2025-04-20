@@ -7,18 +7,51 @@
 ##############################################################################
 import os
 
-path_to_file = os.path.abspath(__file__)
-# print(path_to_file)
-msg_length:int = 180
-logger_name_length:int = 8
+# from stacks import critical
+from yail.formatter.columns import ColumnSetup
 
-default_long: str = f"date iso:logger name|8 c:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-default_short: str = f"date today|26:logger name|20:loglevel name|10"
+__doc__="Base Console Template"
+##########################
+#Default Column Setup
+##########################
 
-log_debug: str = f"date iso:logger name|8 c:loglevel name|8:lineno pad4|13 c:package mcf argsval|38 l:msg|{msg_length}:data"
-# log_info: str = f"date iso:logger name|8 c:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-log_info: str = f"date iso:logger name|8 c:loglevel name|8:package cf argsval|33 l:msg|{msg_length}"
-log_warning: str = f"date iso:logger name|8 c:loglevel name|8:package mcf args|33 l:msg|{msg_length}"
-log_error: str = f"date iso:logger name|8 c:loglevel name|8:lineno pad4|13 c:package mcf args|33 l:msg|{msg_length}"
-log_critical: str = f"date iso:logger name|8 c:loglevel name|8:lineno pad4|13 c:package mcf argsval|33 l:msg|{msg_length}"
-log_fatal: str = f"date iso:logger name|8 c:loglevel name|8:lineno pad4|13 c:package mcf argsval|33 l:msg|{msg_length}"
+
+datecolumn = ColumnSetup(htype='date',align="l",width=0,setts=['iso'])
+datacolumn = ColumnSetup(htype='data',align="l",width=0,setts=[])
+linenocolumn = ColumnSetup(htype='lineno',align="l",width=10,setts=['pad4'])
+loggercolumn = ColumnSetup(htype='logger',align="l",width=10,setts=['name'])
+loglevelcolumn = ColumnSetup(htype='loglevel',align="l",width=10,setts=['name'])
+msgcolumn = ColumnSetup(htype='msg',align="l",width=60,setts=[])
+packagecolumn = ColumnSetup(htype='package',align="l",width=32,setts=['mcf',None])
+
+columns_separator = "| "
+
+##########################
+#MESSAGE FORMATS
+##########################
+
+#You can define custom columns if you need more control
+today_date = ColumnSetup(htype='date',align="c", filler=" ",width=19,setts=['today'])
+
+default_long = [datecolumn, loggercolumn, loglevelcolumn, packagecolumn, msgcolumn]
+default_short = [today_date, loggercolumn, loglevelcolumn, msgcolumn]
+
+#DEBUG MSG
+debug_package = ColumnSetup(htype='package',align="l",width=32,setts=['mcf','argsval'])
+log_debug = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
+
+#INFO MSG
+log_info = [today_date, loggercolumn, loglevelcolumn, linenocolumn, packagecolumn, msgcolumn]
+
+#WARNING MSG
+log_warning = [today_date, loggercolumn,  loglevelcolumn, linenocolumn, packagecolumn,msgcolumn,datacolumn]
+
+#ERROR MSG
+log_error = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
+
+#CRITICAL MSG
+critical_package = ColumnSetup(htype='package',align="l",width=42,setts=['pmcf','argsval'])
+log_critical = [datecolumn, loggercolumn, loglevelcolumn, linenocolumn, debug_package,msgcolumn,datacolumn]
+
+
+

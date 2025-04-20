@@ -1,4 +1,5 @@
 import inspect
+from yail.signaling import emit
 from .logic import LoggerLevel,LoggerMessage
 
 class BaseLogger:
@@ -9,19 +10,17 @@ class BaseLogger:
         #
         Exposes log functions for the different levels
     """
-    parent: any
-    _log_level: LoggerLevel
     _name:str
+    _log_level: LoggerLevel
     _block_loglevel:bool = False
     _mute_console: bool = False
     _mute_all: bool = False
     _solo: bool = False
 
 
-    def __init__(self,name:str, parent:any, log_level,block_loglevel:bool=False):
+    def __init__(self,name:str,log_level,block_loglevel:bool=False):
         self._log_level = log_level
         self._name = name
-        self.parent = parent
         self._block_loglevel = block_loglevel
 
     def __base_log_functions(self, loglevel:LoggerLevel,frame:any ,info:str, data:any, external_frame:any = None):
@@ -38,14 +37,8 @@ class BaseLogger:
         if external_frame is not None:
             act_fram = external_frame
 
-        # msg = self.formatter.compile(msg=info,frame=act_fram,loglevel=loglevel,data=data)
-        # msg = f'{module_name}.{qual_name}'
-        # print(msg)
         msg_obj = LoggerMessage(logger_name=self.name, log_level=loglevel,msg=info,frame=act_fram,data=data)
-        self.__base_output_function(msg_obj)
-
-    def __base_output_function(self,data:LoggerMessage)->None:
-        self.parent.process(data)
+        emit(f'{self.name}-stack-connection',msg_obj=msg_obj)
 
 
     @property

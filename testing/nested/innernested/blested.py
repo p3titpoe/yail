@@ -1,6 +1,6 @@
 import inspect
 import yail as logger
-# from yail.formatter import Formatter
+# from stacks.formatter import Formatter
 from yail.logic import LoggerLevel
 # fmt = logger.formatter.Formatter("Test")
 

@@ -29,11 +29,10 @@ class ColumnSetup:
     fill_space = False
 
     def __repr__(self):
-        txt=f"ColumnSetUp\n"
-        txt +="-"*len(txt)
-        txt += "\n"
-        for k,v in self.__dict__.items():
-            txt += f"{k} : {v} \n"
+        txt=f"ColumnSetUp("
+        tmp = [f"{k}={v}" for k,v in self.__dict__.items()]
+        tmp = ", ".join(tmp)
+        txt += tmp+")"
         return txt
 
 @dataclass(init=False)
@@ -68,11 +67,10 @@ class BaseColumn:
         self.__post_init__()
 
     def __repr__(self):
-        txt=f"{self._htype.name.capitalize()}Column\n"
+        txt=f"{self._htype.name.capitalize()}Column"
         txt +="-"*len(txt)
-        txt += "\n"
         for k,v in self.__dict__.items():
-            txt += f"{k} : {v} \n"
+            txt += f"{k} : {v} "
         return txt
 
     def __post_init__(self):

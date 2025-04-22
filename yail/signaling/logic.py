@@ -5,10 +5,9 @@ from enum import Enum
 from .registry import RegistryController,RegistryEntry
 
 
-class InternalSystemEvent(Enum):
-    pass
 @dataclass
 class SignalEvent(RegistryEntry):
+    """Registry Entry for the Signals"""
     _sig:dict[str:type]
     docs:str = "Executor is the func being executed when the signal is called"
 
@@ -19,11 +18,13 @@ class SignalEvent(RegistryEntry):
 
 @dataclass
 class SignalSubscriber(RegistryEntry):
+    """
+    Registry Entry for the subscriber
+    """
     _receiver_func:Callable
     _subscription:SignalEvent
 
     def __post_init__(self):
-        # jj = inspect.signature(self._receiver_func)
         pp = inspect.getfullargspec(self.lnk)
         jj = {k:v for k,v in pp.annotations.items() if k != 'return'}
         if self._subscription.signature != jj:
@@ -67,6 +68,7 @@ class SignalCache:
 
 
     def _on_delete(self,who)->None:
+        """ hooks on Registry when registry is deleted"""
         if isinstance(who,SignalEvent):
 
             for k in self.links[who.name]:
@@ -79,6 +81,8 @@ class SignalCache:
             self.links[sig.name].remove(who.name)
 
     def _on_add(self,who)->None:
+        """ Hook on Registry when entry is added"""
+
         if isinstance(who, SignalEvent):
             self.links[who.name] = []
 
@@ -102,18 +106,31 @@ class SignalCache:
 
 
     def subscribe(self,subscriber_name:str,signal_name:str,receiver_func:Callable)->SignalSubscriber:
-        # cunt(f"subscribe: {subscriber_name}")
+        """
+            Subscribe the given function to the given Signal.
+
+            Subscriber names have to be unique. but a function can listen to more channels other different subscriber name
+        """
         sig = self.signal.by_name(signal_name)
         new_subscriber = SignalSubscriber(subscriber_name,receiver_func,sig)
         self.subscriber.add(new_subscriber)
         return new_subscriber
 
     def unsubscribe(self,subscriber_name:str)->None:
+        """
+        Unsubscribe the given subscriber from the signal it's listening to.
+        """
         if subscriber_name in self.subscriber.registry_by_name:
             sub:SignalSubscriber = self.subscriber.by_name(subscriber_name)
             self.subscriber.rm(subscriber_name)
 
     def create_signal(self, signalname:str,signature:dict[str:type],docs:str="Say somtehing")->SignalEvent:
+        """
+        Creates a new signal.
+
+        .. warning:
+           The signal name MUST be unique.
+        """
         new_signal = SignalEvent(signalname,signature,docs)
         if signalname in self.signal.registry_by_name:
             error = f"A signal named {new_signal.name} already exists"
@@ -121,11 +138,11 @@ class SignalCache:
 
         else:
             self.signal.add(new_signal)
-            # self.links[new_signal.name] = []
             return new_signal
 
     def emit_signal(self,signalname:str,**kwargs)->None:
-        # print(self.signal.registry_by_name)
+        """Emits the given the signal."""
+
         sig:SignalEvent = self.signal.by_name(signalname)
         out = {}
         if len(kwargs) == len(sig.signature):
@@ -136,7 +153,6 @@ class SignalCache:
                 if not isinstance(v,sig.signature[k]):
                     error=f"{k} has the wrong type! Need {sig.signature} "
                     raise ValueError(error)
-
 
             for subname in self.links[sig.name]:
                 sub:SignalSubscriber = self.subscriber.by_name(subname)

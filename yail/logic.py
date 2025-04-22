@@ -258,15 +258,6 @@ class Registry:
 
         return reg_id
 
-@dataclass
-class Observer:
-    _lnks:dict[str:object] =None
-
-    def __post_init__(self):
-        self._lnks = {}
-
-    def add_link(self):
-        pass
 @dataclass(repr=False)
 class LoggerCache(Registry):
     """

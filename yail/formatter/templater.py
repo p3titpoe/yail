@@ -1,9 +1,8 @@
 import random, string
-from pydoc import importfile
 from dataclasses import dataclass,field
-from yail.formatter.cols_func import *
-from yail.formatter.templates import base_template as base_tmpl
-from yail.formatter.columns import ColumnType,ColumnSetup,BaseColumn
+from yail.loggers import LoggerLevel
+from .templates import base_template as base_tmpl
+from .columns import ColumnType,ColumnSetup,BaseColumn
 
 
 @dataclass
@@ -16,10 +15,6 @@ class Templater:
     _template_path:any = None
     _columns_separator: str = "::"
     _default_cols_len:list = field(init=False, default_factory=list)
-    _init_short:str = "date today|26:logger name|20:loglevel name|10"
-    _init_long:str = (f"date iso:logger name|8 c:loglevel name|8:"
-                      f"lineno pad4|13 c:package mcf args|33 l:"
-                      f"msg|100")
     _init_default_attr:str ="short long"
     _init_log_attr:str ="debug info warning error critical fatal"
     _lib: dict = field(init=False,default_factory=dict)

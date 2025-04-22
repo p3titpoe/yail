@@ -99,14 +99,10 @@ class BaseColumn:
 
     def _f_spacer(self,content:str):
         out = f"{content}"
-        # print("f_spacer :: 1 :: ",out)
         fix = out
         if self._fixed:
             endl = f"{self._filler}{self._align_dict[self._align]}{str(self._width)}"
-
-            # fix = f"{out}{' ':{endl}}"
             fix = f"{out:{endl}}"
-        # a print("f_spacer :: 2 :: ",self._htype,"ALIGN:: ",self._align, endl)
 
         return fix
 
@@ -145,13 +141,8 @@ class BaseColumn:
 
         fc = lib[self._fill_space]
         out = fc(content=tmp)
-        # if out == "":
-        #     print("compile:: ", out,tmp)
-        # # # else:
-        # # #     print("KKKKK::", out)
 
         return out
-
 
     def process(self,lm:LoggerMessage,*args)->str:
         """
@@ -201,7 +192,6 @@ class DateColumn(BaseColumn):
                      'cstm':self.custom}
 
         content = possibles[self._setts[0]]()
-        # print("CONTENT ::", content, self._setts[0], self._setts)
         return self.compile(content)
 
 @dataclass(init=False)
@@ -231,14 +221,12 @@ class DataColumn(BaseColumn):
             if offset:
                 inlen -= offsetlen
             inlen -=offlen
-        # print(self.dataframe_end)
         fill = " "*(self.dataframe_end-inlen)
         fill += self._colsep
         return fill
 
     def pass_through(self,data:any, *args)->list[str]:
         dd = type(data)
-        print("PT",data)
         out= f"{self.prefix}{dd}"
         return [out]
 
@@ -262,7 +250,6 @@ class DataColumn(BaseColumn):
         out = []
         name_cols = []
         ordr_cols = []
-        # print("DISPSS :: ",out)
         if isinstance(lst,ModuleType):
             name = lst.__name__.split(".")[-1]
             pack = lst.__package__
@@ -289,7 +276,6 @@ class DataColumn(BaseColumn):
             msg_mark = 0
             line = f" {name_cols[i]:<10} : {n}"
             line = self.prefix+line
-            # print(line)
             out.append(line)
 
         return out
@@ -310,7 +296,6 @@ class DataColumn(BaseColumn):
         t = type(tocheck)
         out = None
         if t in library:
-            # print("TYPE ::",t)
             out = library[t]
         else:
             if inspect.isclass(tocheck):
@@ -336,22 +321,17 @@ class DataColumn(BaseColumn):
             if table:
                 tb_line = f"{'—'*self.width}"
                 out += f"{tb_line}{self._colsep}{self._fill_data_framend(tb_line,offset=False,offlen=-1)} \n"
-                # out += f"{'-'*(total_len-len(self.prefix))}\n"
+
             out += f"{self.prefix} {block_title}{self._fill_data_framend(block_title,offlen=-21)} \n"
             tt = self.get_type_function(lm.data)
             if tt is not None:
                 for  c in  tt(lm.data):
                     comp =  self.compile(c)
-                    # print(len(comp))
-                    # print(c)
                     end = self._fill_data_framend(c)
                     out += comp+end+"\n"
 
                 if table:
                     out += self.prefix+self._fill_data_framend()
-
-
-            # out += f"\n{'-'*self.width}{self._colsep}{'-'*+150}"
 
             return out
 

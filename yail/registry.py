@@ -1,4 +1,5 @@
 from dataclasses import dataclass,field
+from idlelib.window import registry
 
 
 @dataclass
@@ -230,7 +231,7 @@ class RegistryController:
     def registry_by_name(self)->dict:
         return self.registry.by_name
     
-    def add(self, entry:RegistryEntry)->int:
+    def add(self, entry:RegistryEntry):
         regid = -1
         if entry.name not in self.registry_by_name:
             regid = self.registry.register(entry)

@@ -19,10 +19,6 @@ class TemplateType(Enum):
 class BaseFormatter:
     """
         Formats the log string according to columns in templates
-
-
-
-
     """
     ctype:any
     _ttype:TemplateType = None

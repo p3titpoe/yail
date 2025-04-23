@@ -21,7 +21,7 @@ It features a simple template system for different log levels and overrides on a
 **Management**
 - [x] Global Mute, Solo and Set Levels
 - [x] Stop processing
-- [ ] Mute by log level
+- [x] Mute by log level
 - [ ] Grouping
 - [ ] Colored output
 
@@ -32,10 +32,7 @@ It features a simple template system for different log levels and overrides on a
 
 **Output Handlers**
 - [x] Console
-- [ ] File
-- [ ] Web
-- [ ] Socket
-
+- [x] File
 
 
 ### Basic Usage
@@ -44,10 +41,10 @@ It features a simple template system for different log levels and overrides on a
 yail gives you access to a console logger from the start.
 
 ```python
-import yail as logger
+import yail 
 
-logger.info("Hello World")
-logger.warning("Hello World! You are burning")
+yail.info("Hello World")
+yail.warning("Hello World! You are burning")
 ```
 
 This is ok for small projects where you only need one logger and then filter by log level.<br>
@@ -67,12 +64,12 @@ For example, loggers are NOT shareable per default, but they can be set to publi
 
 ```python
 #main.py
-import yail as logger
+import yail
 from yail import LoggerLevel
 
 #public controls whether the logger can be called from another module
 #block_level set to True blocks the logger at his initial loglevel to keep it safe from global level change
-log = logger.get_logger(name='MyLogger',  
+log = yail.get_logger(name='MyLogger',  
                         loglevel=LoggerLevel.INFO,
                         public=True, 
                         block_level=False
@@ -84,9 +81,9 @@ log.info("Hello World")
 ##### Get a created public logger
 ```python
 #other.py
-import yail as logger
+import yail
 
-log = logger.logger_by_name('MyLogger')
+log = yail.logger_by_name('MyLogger')
 log.info("Hello World")
 ```
 
@@ -97,18 +94,18 @@ As long as yail is imported you can control them from anywhere.
 
 ```python
 #another.py
-import yail as logger
+import yail 
 
 #mute function
-logger.mute('MyLogger')
-logger.mute('MyLogger4')
+yail.mute('MyLogger')
+yail.mute('MyLogger4')
 
-logger.muteall()
-logger.muteoff()
+yail.muteall()
+yail.muteoff()
 
 #Solo In Place
-logger.sip('MyLogger')
-logger.sip() #offs the sip
+yail.sip('MyLogger')
+yail.sip() #offs the sip
 
 
 

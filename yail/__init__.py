@@ -1,4 +1,4 @@
-from . import signaling as sig
+from . import signaling as signals
 from .loggers import *
 from .handlers import HandlerManager
 from inspect import currentframe
@@ -9,11 +9,11 @@ __doc__="""
 ############################################################
 # Set Up Signaling
 ############################################################
-sig._sign_manager.create_signal('system-bus', {'msg_obj': LoggerMessage})
-sig._sign_manager.create_signal('system-aux', {'msg_obj': LoggerMessage})
-sig._sign_manager.create_signal('system-com', {'msg_obj': LoggerMessage})
-sig._sign_manager.create_signal("handler-console",{'msg_obj':LoggerMessage})
-sig._sign_manager.create_signal("handler-file",{'msg_obj':LoggerMessage})
+signals._sign_manager.create_signal('system-bus', {'msg_obj': LoggerMessage})
+signals._sign_manager.create_signal('system-aux', {'msg_obj': LoggerMessage})
+signals._sign_manager.create_signal('system-com', {'msg_obj': LoggerMessage})
+signals._sign_manager.create_signal("handler-console", {'msg_obj':LoggerMessage})
+signals._sign_manager.create_signal("handler-file", {'msg_obj':LoggerMessage})
 
 ############################################################
 # Set Up BaseClasses

@@ -8,3 +8,4 @@ User Manual
 
    installation
    quick_start
+   packages/main

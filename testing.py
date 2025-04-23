@@ -83,4 +83,4 @@ breakp2 = {20:[handlers.handler.file.mute_loggers,'Test-1'],
            }
 
 ltc = logTest(6,breakp2)
-t =Thread(target=ltc.run_tests(20))
+t =Thread(target=ltc.run_tests(120))

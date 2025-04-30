@@ -7,4 +7,5 @@ Dev Corner
    :maxdepth: 6
 
    api
+   Yail
    by_modules

@@ -2,7 +2,7 @@ from dataclasses import dataclass,field
 from .logic import HandlerType,HandlerChannelMixer,ChannelRouting,HandlerChannel
 from yail.loggers import LoggerLevel,LoggerMessage
 from yail.formatter import FormatterStyle,BaseFormatter
-from  yail.registry import RegistryController,RegistryEntry
+from yail.registry import RegistryController,RegistryEntry
 from yail.signaling import subscribe,new_signal,emit
 from pathlib import Path
 

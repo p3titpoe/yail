@@ -10,10 +10,24 @@ class SignalEvent(RegistryEntry):
     """Registry Entry for the Signals"""
     _sig:dict[str:type]
     docs:str = "Executor is the func being executed when the signal is called"
+    _emitted:dict[str:int] = None
+
+    def __post_init__(self):
+        self._emitted = {}
 
     @property
     def signature(self)->list:
         return self._sig
+
+    @property
+    def emitted(self)->dict[str:int]:
+        return self._emitted
+
+    @emitted.setter
+    def emitted(self, value:str)->None:
+        if value not in self._emitted:
+            self._emitted[value] = 0
+        self._emitted[value] += 1
 
 
 @dataclass
@@ -66,7 +80,6 @@ class SignalCache:
         self._signals.parent = self
         self._subscribers.parent = self
 
-
     def _on_delete(self,who)->None:
         """ hooks on Registry when registry is deleted"""
         if isinstance(who,SignalEvent):
@@ -89,7 +102,6 @@ class SignalCache:
         if isinstance(who, SignalSubscriber):
             sig: SignalEvent = who._subscription
             self.links[sig.name].append(who.name)
-
 
 
     @property

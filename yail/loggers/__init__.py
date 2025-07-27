@@ -12,8 +12,11 @@ def start_log__manager()->LoggerManager:
         loggers = LoggerManager()
     return loggers
 
-def get_logger(name:str, loglevel:LoggerLevel=None, public:bool=False, block_level=False)->BaseLogger:
-    return loggers.make_new_logger(name, loglevel=loglevel, public=public, block_level=block_level, handlers=['handler-console'])
+def get_logger(name:str, loglevel:LoggerLevel=None, public:bool=False,block_level=False, handlers:list = None)->BaseLogger:
+    hlist = ['handler-console']
+    if handlers is not None:
+        hlist.extend(handlers)
+    return loggers.make_new_logger(name, loglevel=loglevel, public=public, block_level=block_level, handlers=hlist)
 
 def logger_by_name(name:str)->BaseLogger:
     return loggers.get_logger_by_name(name)

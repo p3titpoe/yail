@@ -27,6 +27,14 @@ handlers:HandlerManager = HandlerManager()
 def master_loglevel(loglvlname: str) -> None:
     loggers.set_loglevel(loglvlname)
 
+def console_mute(loggername:str)->None:
+    """Acts as a toggle"""
+    handlers.handler.console.mute_loggers(loggername)
+
+def file_mute(loggername:str)->None:
+    """Acts as a toggle"""
+    handlers.handler.file.mute_loggers(loggername)
+
 ##############################################################
 # convennience functions for logging to root loggger
 #

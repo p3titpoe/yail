@@ -328,7 +328,7 @@ class LoggerManager:
             RETURNS:
                 Baselogger
         """
-        cl:LoggerStack = self.rootcache.cache_entry_by_name(name)
+        cl:LoggerStack = self.loggers.cache_entry_by_name(name)
         if not cl.public:
             raise PermissionError(f"{cl.name} is not Public!")
         else:
@@ -359,7 +359,7 @@ class LoggerManager:
         #Create a private channel for the connection stack-logger
         new_signal(f'{name}-stack-connection',{'msg_obj':LoggerMessage})
         new_logger = BaseLogger(name=name,log_level=loglvl,block_loglevel=block_level)
-        new_stack = LoggerStack(name=name,logger=new_logger,public=False,handlers=handlers)
+        new_stack = LoggerStack(name=name,logger=new_logger,public=public,handlers=handlers)
         subscribe(f'logger-{name}',f'{name}-stack-connection',new_stack.process)
         self._loggers.register(new_stack)
         return new_logger
